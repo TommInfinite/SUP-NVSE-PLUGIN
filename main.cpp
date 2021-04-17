@@ -1,0 +1,614 @@
+
+
+
+#include "nvse/PluginAPI.h"
+#include "nvse/CommandTable.h"
+#include "nvse/GameAPI.h"
+#include "nvse/ParamInfos.h"
+#include "nvse/GameObjects.h"
+#include "nvse/nvse/GameUI.h"
+#include "decoding.h"
+#include "params.h"
+#include "nvse\nvse\utility.h"
+#include "nvse\nvse\ArrayVar.h"
+#include "nvse\nvse\iomanip"
+#include "nvse\nvse\GameSettings.h"
+#include "nvse\nvse\SafeWrite.h"
+#include <string>
+
+
+#include <windows.h>
+#include <stdio.h>
+#include <VersionHelpers.h>
+#include <nvse/nvse/GameOSDepend.h>
+#include <Tomm_JiP_FileStream.h>
+#include <common\SimpleIni.h>
+#include <cmath>
+#include <iostream>
+
+
+
+
+
+#ifndef RegisterScriptCommand
+#define RegisterScriptCommand(name) 	nvse->RegisterCommand(&kCommandInfo_ ##name);
+#endif
+
+IDebugLog		gLog("SUPNVSE.log");
+
+
+PluginHandle	g_pluginHandle = kPluginHandle_Invalid;
+
+NVSEMessagingInterface* g_messagingInterface;
+NVSEArrayVarInterface* ArrIfc = NULL;
+NVSEInterface* g_nvseInterface;
+NVSECommandTableInterface* g_cmdTable;
+const CommandInfo* g_TFC;
+
+bool (*ExtractArgsEx)(COMMAND_ARGS_EX, ...);
+
+
+NVSEStringVarInterface* StrIfc = NULL;
+HUDMainMenu* g_HUDMainMenu = NULL;
+InterfaceManager* g_interfaceManager = NULL;
+TileMenu** g_tileMenuArray = NULL;
+UInt32 g_screenWidth = 0;
+UInt32 g_screenHeight = 0;
+PlayerCharacter* g_ThePlayer = NULL;
+//PlayerCharacter* g_ThePlayer = *(PlayerCharacter**)0x11DEA3C;
+//VATSCameraData* g_VATSCameraData = (VATSCameraData*)0x11F2250; // From JIP
+UInt32 SUPNVSEVersion = 130;
+#define NUM_ARGS *((UInt8*)scriptData + *opcodeOffsetPtr)
+bool b_MouseInput = true;
+
+//SETTINGS
+int bTFCPosOnLoadFix = 0;
+
+
+UnorderedMap<const char*, UInt32> s_menuNameToID({ {"MessageMenu", kMenuType_Message}, {"InventoryMenu", kMenuType_Inventory}, {"StatsMenu", kMenuType_Stats},
+	{"HUDMainMenu", kMenuType_HUDMain}, {"LoadingMenu", kMenuType_Loading}, {"ContainerMenu", kMenuType_Container}, {"DialogMenu", kMenuType_Dialog},
+	{"SleepWaitMenu", kMenuType_SleepWait}, {"StartMenu", kMenuType_Start}, {"LockpickMenu", kMenuType_LockPick}, {"QuantityMenu", kMenuType_Quantity},
+	{"MapMenu", kMenuType_Map}, {"BookMenu", kMenuType_Book}, {"LevelUpMenu", kMenuType_LevelUp}, {"RepairMenu", kMenuType_Repair},
+	{"RaceSexMenu", kMenuType_RaceSex}, {"CharGenMenu", kMenuType_CharGen}, {"TextEditMenu", kMenuType_TextEdit}, {"BarterMenu", kMenuType_Barter},
+	{"SurgeryMenu", kMenuType_Surgery}, {"HackingMenu", kMenuType_Hacking}, {"VATSMenu", kMenuType_VATS}, {"ComputersMenu", kMenuType_Computers},
+	{"RepairServicesMenu", kMenuType_RepairServices}, {"TutorialMenu", kMenuType_Tutorial}, {"SpecialBookMenu", kMenuType_SpecialBook},
+	{"ItemModMenu", kMenuType_ItemMod}, {"LoveTesterMenu", kMenuType_LoveTester}, {"CompanionWheelMenu", kMenuType_CompanionWheel},
+	{"TraitSelectMenu", kMenuType_TraitSelect}, {"RecipeMenu", kMenuType_Recipe}, {"SlotMachineMenu", kMenuType_SlotMachine},
+	{"BlackjackMenu", kMenuType_Blackjack}, {"RouletteMenu", kMenuType_Roulette}, {"CaravanMenu", kMenuType_Caravan}, {"TraitMenu", kMenuType_Trait} });
+
+
+typedef NVSEArrayVarInterface::Array NVSEArrayVar;
+typedef NVSEArrayVarInterface::Element NVSEArrayElement;
+
+
+Tile* InterfaceManager::GetActiveTile() //proably from JiP
+{
+	return activeTile ? activeTile : activeTileAlt;
+}
+
+// SaveFileVars
+//////////////////////////////
+char SavegameFolder[0x4000];
+//Temp
+char* s_SaveTemp;
+
+//LastLoaded
+UInt32 iLoadSGLength;
+char LoadedSGName[0x4000] = "NULL";
+char LoadedSGPathFOS[0x4000] = "NULL";
+char LoadedSGPathNVSE[0x4000] = "NULL";
+
+//LastSaved
+UInt32 iSavedSGLength;
+char SavedSGName[0x4000] = "NULL";
+char SavedSGPathFOS[0x4000] = "NULL";
+char SavedSGPathNVSE[0x4000] = "NULL";
+////////////////////////////// GLOBALS
+
+char FalloutFolderPath[0x4000] = "NULL";
+
+/// //////////////////////////
+
+
+
+void OnDeferredInit()
+{
+
+	CSimpleIniA ini;
+	ini.SetUnicode();
+	if (FileExists("Data/nvse/plugins/supNVSE.ini"))
+	{
+	}
+	else {
+		ini.SetValue("Settings", "bTFCPosOnLoadFix", "1");
+		ini.SaveFile("Data//nvse//plugins//supNVSE.ini");
+		_MESSAGE("Setting bTFCPosOnLoadFix >>>>> %i", bTFCPosOnLoadFix);
+	}
+
+	auto errVal = ini.LoadFile("Data//nvse//plugins//supNVSE.ini");
+	if (errVal == SI_Error::SI_FILE) { /* handle error */ };
+
+	bTFCPosOnLoadFix = ini.GetLongValue("Settings", "bTFCPosOnLoadFix");
+	_MESSAGE("bTFCPosOnLoadFix  is %i", bTFCPosOnLoadFix);
+}
+
+
+const std::string& GetFalloutDirectorySUP(void)
+{
+	static std::string s_falloutDirectory;
+
+	if (s_falloutDirectory.empty())
+	{
+		// can't determine how many bytes we'll need, hope it's not more than MAX_PATH
+		char	falloutPathBuf[MAX_PATH];
+		UInt32	falloutPathLength = GetModuleFileName(GetModuleHandle(NULL), falloutPathBuf, sizeof(falloutPathBuf));
+
+		if (falloutPathLength && (falloutPathLength < sizeof(falloutPathBuf)))
+		{
+			std::string	falloutPath(falloutPathBuf, falloutPathLength);
+
+			// truncate at last slash
+			std::string::size_type	lastSlash = falloutPath.rfind('\\');
+			if (lastSlash != std::string::npos)	// if we don't find a slash something is VERY WRONG
+			{
+				s_falloutDirectory = falloutPath.substr(0, lastSlash + 1);
+
+				_DMESSAGE("fallout root = %s", s_falloutDirectory.c_str());
+			}
+			else
+			{
+				_WARNING("no slash in fallout path? (%s)", falloutPath.c_str());
+			}
+		}
+		else
+		{
+			_WARNING("couldn't find fallout path (len = %d, err = %08X)", falloutPathLength, GetLastError());
+		}
+	}
+
+
+	strcpy(FalloutFolderPath, s_falloutDirectory.c_str());
+
+}
+
+
+
+
+
+
+
+
+
+extern UnorderedSet<UInt32> s_gameLoadedInformedScriptsSUP;
+
+#if RUNTIME
+NVSEScriptInterface* g_script;
+#endif
+// This is a message handler for nvse events
+// With this, plugins can listen to messages such as whenever the game loads
+void MessageHandler(NVSEMessagingInterface::Message* msg)
+{
+	switch (msg->type)
+	{
+	case NVSEMessagingInterface::kMessage_LoadGame: 
+
+
+
+		break;
+	case NVSEMessagingInterface::kMessage_SaveGame:
+
+		UInt32 iLength2;
+		s_SaveTemp = (char*)msg->data;
+		strcpy(SavedSGName, "");
+		iLength2 = strlen(s_SaveTemp) - 4;
+		strncat(SavedSGName, s_SaveTemp, iLength2);
+
+
+
+		strcpy(SavedSGPathFOS, SavegameFolder);
+		strcat(SavedSGPathFOS, s_SaveTemp);
+
+		strcpy(SavedSGPathNVSE, SavegameFolder);
+		iSavedSGLength = strlen(s_SaveTemp);
+		iLength2 = iSavedSGLength - 3;
+		strncat(SavedSGPathNVSE, s_SaveTemp, iLength2);
+		strcat(SavedSGPathNVSE, "nvse");
+
+		//_MESSAGE("Current Saved FOS name is %s", SavedSGPathFOS);
+		//_MESSAGE("Current Saved NVSE name is %s", SavedSGPathNVSE);
+
+		break;
+	case NVSEMessagingInterface::kMessage_PreLoadGame:
+
+		s_gameLoadedInformedScriptsSUP.Clear();
+		// Credits to C6 for the help.
+		//_MESSAGE("Received PRELOAD message with file path %s", msg->data);
+
+		UInt32 iLength;
+		s_SaveTemp = (char*)msg->data;
+		strcpy(LoadedSGName, "");
+		iLength = strlen(s_SaveTemp) - 4;
+		strncat(LoadedSGName, s_SaveTemp, iLength);
+
+
+
+		//strncat(LoadedSGName, s_SaveTemp, iLength);
+
+		strcpy(LoadedSGPathFOS, SavegameFolder);
+		strcat(LoadedSGPathFOS, s_SaveTemp);
+
+		strcpy(LoadedSGPathNVSE, SavegameFolder);
+		iLoadSGLength = strlen(s_SaveTemp);
+		iLength = iLoadSGLength - 3;
+		strncat(LoadedSGPathNVSE, s_SaveTemp, iLength);
+		strcat(LoadedSGPathNVSE, "nvse");
+
+
+		if ((*g_osGlobals)->tfcState == 1 && bTFCPosOnLoadFix == 1) // Jazz
+		{
+			//RunScript("TFC");
+			(*(OSGlobals**)0x11DEA0C)->tfcState = 0;
+
+		}
+
+		//_MESSAGE("Current Loaded FOS name is %s", LoadedSGPathFOS);
+		//_MESSAGE("Current Loaded NVSE name is %s", LoadedSGPathNVSE);
+
+
+
+		break;
+	case NVSEMessagingInterface::kMessage_PostLoadGame:
+		//_MESSAGE("Received POST POS LOAD GAME message with file path %s", msg->data);
+		break;
+	case NVSEMessagingInterface::kMessage_PostLoad:
+		//_MESSAGE("Received POST LOAD message with file path %s", msg->data);
+
+		break;
+	case NVSEMessagingInterface::kMessage_PostPostLoad:
+		//_MESSAGE("Received POST POS LOAD message with file path %s", msg->data);
+		break;
+	case NVSEMessagingInterface::kMessage_ExitGame:
+		//_MESSAGE("Received exit game message");
+		break;
+	case NVSEMessagingInterface::kMessage_ExitGame_Console:
+		//_MESSAGE("Received exit game via console qqq command message");
+		break;
+	case NVSEMessagingInterface::kMessage_ExitToMainMenu:
+		//_MESSAGE("Received exit game to main menu message");
+		break;
+	case NVSEMessagingInterface::kMessage_Precompile:
+		//_MESSAGE("Received precompile message with script at %08x", msg->data);
+		break;
+
+	case NVSEMessagingInterface::kMessage_DeleteGame:
+		//_MESSAGE("Received DELETE message with file path %s", msg->data);
+		break;
+
+	case NVSEMessagingInterface::kMessage_DeferredInit: 
+		g_HUDMainMenu = *(HUDMainMenu**)0x11D96C0;  // From JiP's patches game
+		g_interfaceManager = *(InterfaceManager**)0x11D8A80; // From JiP's patches game
+		g_tileMenuArray = *(TileMenu***)0x11F350C; // From JiP's patches game
+		g_screenWidth = *(UInt32*)0x11C73E0; // From JiP's patches game
+		g_screenHeight = *(UInt32*)0x11C7190; // From JiP's patches game
+		g_ThePlayer = *(PlayerCharacter**)0x11DEA3C; // From JIP
+		
+
+		CALL_MEMBER_FN(SaveGameManager::GetSingleton(), ConstructSavegamePath)(SavegameFolder);
+		OnDeferredInit();
+		GetFalloutDirectorySUP();
+		break;
+
+	//case NVSEMessagingInterface::kMessage_MainGameLoop:
+		//_MESSAGE("MainLOOP");
+		//break;
+
+	case NVSEMessagingInterface::kMessage_RuntimeScriptError:
+		//_MESSAGE("Received runtime script error message %s", msg->data);
+		break;
+	default:
+		break;
+	}
+}
+
+
+#include "Tomm_fn_Misc.h"
+#include "Tomm_fn_UI.h"
+#include "Tomm_fn_TFC.h"
+#include "Tomm_fn_Screenshot.h"
+#include "Tomm_fn_INI.h"
+
+
+
+
+
+
+#if RUNTIME
+//In here we define a script function
+//Script functions must always follow the Cmd_FunctionName_Execute naming convention
+
+#endif
+
+//This defines a function without a condition, that does not take any arguments
+
+
+
+
+bool NVSEPlugin_Query(const NVSEInterface* nvse, PluginInfo* info)
+{
+	//_MESSAGE("query");
+
+	// fill out the info structure
+	info->infoVersion = PluginInfo::kInfoVersion;
+	info->name = "SUP NVSE Plugin";
+	info->version = SUPNVSEVersion;
+
+	
+	//s_debug.CreateLog("Tomm_NVSE_Debug.log");
+
+	// version checks
+	if (nvse->nvseVersion < NVSE_VERSION_INTEGER)
+	{
+		_ERROR("NVSE version too old (got %08X expected at least %08X)", nvse->nvseVersion, NVSE_VERSION_INTEGER);
+		return false;
+	}
+
+	if (!nvse->isEditor)
+	{
+		g_script = (NVSEScriptInterface*)nvse->QueryInterface(kInterface_Script);
+		ExtractArgsEx = g_script->ExtractArgsEx;
+		StrIfc = (NVSEStringVarInterface*)nvse->QueryInterface(kInterface_StringVar); // From JG
+
+		ArrIfc = (NVSEArrayVarInterface*)nvse->QueryInterface(kInterface_ArrayVar); // From JG
+
+
+		if (nvse->runtimeVersion < RUNTIME_VERSION_1_4_0_525)
+		{
+			_ERROR("incorrect runtime version (got %08X need at least %08X)", nvse->runtimeVersion, RUNTIME_VERSION_1_4_0_525);
+			return false;
+		}
+
+		if (nvse->isNogore)
+		{
+			_ERROR("NoGore is not supported");
+			return false;
+		}
+	}
+
+	else
+	{
+		if (nvse->editorVersion < CS_VERSION_1_4_0_518)
+		{
+			_ERROR("incorrect editor version (got %08X need at least %08X)", nvse->editorVersion, CS_VERSION_1_4_0_518);
+			return false;
+		}
+	}
+
+	// version checks pass
+	// any version compatibility checks should be done here
+	return true;
+}
+
+
+
+bool NVSEPlugin_Load(const NVSEInterface* nvse)
+{
+
+
+
+	g_pluginHandle = nvse->GetPluginHandle();
+
+	// save the NVSEinterface in cas we need it later
+	g_nvseInterface = (NVSEInterface*)nvse;
+
+	// register to receive messages from NVSE
+	g_messagingInterface = (NVSEMessagingInterface*)nvse->QueryInterface(kInterface_Messaging);
+	g_messagingInterface->RegisterListener(g_pluginHandle, "NVSE", MessageHandler);
+
+
+
+	
+
+	_MESSAGE("SUPNVSE Version: %d", SUPNVSEVersion);
+
+
+
+
+#if RUNTIME
+	g_script = (NVSEScriptInterface*)nvse->QueryInterface(kInterface_Script);
+#endif
+
+
+	//https://geckwiki.com/index.php?title=NVSE_Opcode_Base
+
+	 // register commands
+	#define REG_TYPED_CMD(name, type) nvse->RegisterTypedCommand(&kCommandInfo_##name,kRetnType_##type);
+	#define REG_CMD_STR(name) nvse->RegisterTypedCommand(&kCommandInfo_##name, kRetnType_String) // From JIP_NVSE.H
+	#define REG_CMD_ARR(name) nvse->RegisterTypedCommand(&kCommandInfo_##name, kRetnType_Array) // From JIP_NVSE.H
+
+
+	nvse->SetOpcodeBase(0x3961);
+	//  v.1.00
+	/*1*/RegisterScriptCommand(SetHUDVisibilityFlags);
+	/*2*/RegisterScriptCommand(GetHUDVisibilityFlags);
+	/*3*/RegisterScriptCommand(DumpTileInfo);
+	/*4*/RegisterScriptCommand(DumpTileInfoAll);
+	/*5*/RegisterScriptCommand(GetScreenTrait);
+	/*6*/RegisterScriptCommand(GetCalculatedPos);
+	/*7*/RegisterScriptCommand(GetCursorTrait); 
+	/*8*/RegisterScriptCommand(SetCursorTrait); 
+	/*9*/RegisterScriptCommand(GetSUPVersion);
+	//  v.1.1
+	/*10*/RegisterScriptCommand(SetCursorTraitGradual);
+	/*11*/RegisterScriptCommand(GetFileSize);
+	/*12*/RegisterScriptCommand(GetLoadedSaveSize);
+	/*13*/RegisterScriptCommand(GetSavedSaveSize);
+	/*14*/REG_CMD_STR(GetSaveName);
+	/*15*/RegisterScriptCommand(RoundAlt);
+	/*16*/RegisterScriptCommand(Round);
+	/*17*/RegisterScriptCommand(MarkScriptOnLoad);
+	/*18*/RegisterScriptCommand(IsScriptMarkedOnLoad);
+	/*19*/REG_CMD_ARR(GetNearCells, Array);
+	/*20*/REG_CMD_ARR(DumpTileInfoToArray, Array);
+	//  v.1.25
+	/*20*/REG_CMD_ARR(GetNearMapMarkers, Array);
+	/*21*/RegisterScriptCommand(GetPCTrait);
+	/*22*/RegisterScriptCommand(SUPTest);
+	/*23*/RegisterScriptCommand(GetTFCAngleEx);
+	/*24*/RegisterScriptCommand(SetTFCAngleEx);
+	/*25*/RegisterScriptCommand(GetTFCRotEx);
+	/*26*/RegisterScriptCommand(SetTFCRotEx);
+	/*27*/RegisterScriptCommand(SetTFCPosEx);
+	/*28*/RegisterScriptCommand(GetTFCPosEx);
+	/*29*/RegisterScriptCommand(GetTFCPos);
+	/*30*/RegisterScriptCommand(SetTFCPos);
+	/*31*/RegisterScriptCommand(GetTFCAngle);
+	/*32*/RegisterScriptCommand(SetTFCAngle);
+	/*33*/RegisterScriptCommand(GetTFCRot);
+	/*34*/RegisterScriptCommand(SetTFCRot);
+	/*35*/RegisterScriptCommand(GetHeadingAngleAlt);
+	/*36*/RegisterScriptCommand(GetHeadingAngleBetweenPoints);
+	/*37*/RegisterScriptCommand(GetCalculatedAngleZForTFCCamera);
+	/*38*/RegisterScriptCommand(GetCalculatedAngleXForTFCCamera);
+	/*39*/RegisterScriptCommand(IsNumberNAN);
+	/*40*/RegisterScriptCommand(GetDistanceBetweenPoints);
+	/*41*/RegisterScriptCommand(GetCalculatedPosFrame);
+	/*42*/RegisterScriptCommand(GetCalculatedPosAlt);
+	/*43*/RegisterScriptCommand(CaptureScreenshot);
+	/*44*/RegisterScriptCommand(DeleteScreenshot);
+	/*44*/RegisterScriptCommand(ReadINIFloatFromFile);
+	/*45*/RegisterScriptCommand(ReadINIFloatFromFileAlt);
+    /*46*/REG_CMD_STR(ReadINIStringFromFile);
+	/*47*/RegisterScriptCommand(CaptureScreenshotAlt);
+	//  v.1.3
+	/*48*/REG_CMD_ARR(SetFloatsFromArray, Array);
+	/*49*/REG_CMD_ARR(ReadINISectionsFromFile, Array);
+	/*50*/REG_CMD_ARR(ReadINISectionKeysFromFile, Array);
+
+	///*43*/RegisterScriptCommand(SUPPlayMP3File);
+	//RegisterScriptCommand(ToggleMouseInput);
+	//RegisterScriptCommand(GetUITraitValueType);
+	
+	return true;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//{
+//	Tile* activeTile = g_interfaceManager->GetActiveTile();
+	//if (activeTile)
+	//{
+		//Tile::Value* val = activeTile->GetValue(kTileValue_x);
+		//if (val) return val->num;
+		//*result = val->num;
+		//return true;
+
+	//}
+	//return -1;
+//}
+//TESForm* menuRef = NULL;
+//*result = 0;
+//REFR_RES = g_thePlayer->refID;
+
+//return true;
+//*result = 0;
+//REFR_RES = g_thePlayer->refID;
+//return g_thePlayer->refID;
+//int age1 = 20;
+//age1 = 340;
+//auto hud = HUDMainMenu::GetSingleton();
+
+//for (auto tile : hud->tiles)
+//{
+	//tile->Dump();
+//}
+//g_thePlayer->ToggleFirstPerson(1); //to check if function works at all and it does.
+
+//WORKING - function to dump UI element by Active tile
+//Tile* component = g_interfaceManager->GetActiveTile();
+
+//if (component)
+//{
+//	component->Dump();
+//}
+
+//WORKINGEND
+
+
+
+	//WORKING2 - function to dump UI element by path
+//if (ExtractArgsEx(EXTRACT_ARGS_EX, &s_strArgBuffer))
+//{
+	//Tile* component = GetTargetComponent2(s_strArgBuffer);
+	//if (component)
+	//{
+	//	component->Dump();
+	//}
+
+//}
+//WORKING2 END
+
+		//WORKING3 - Real screen resolution
+//* result = g_screenWidth;
+//DoConsolePrint(result);
+//WORKING3 END
+
+
+//WORKING4 - Set VIS flags
+
+	//if (ExtractArgsEx(EXTRACT_ARGS_EX, &iVisFLags));
+	//{
+	//	g_HUDMainMenu->visibilityOverrides &= iVisFLags;
+
+	//}
+
+	////WORKING4 - Set VIS flags END
+
+	//(EXTRACT_ARGS, &iVisFLags);
+
+	//Console_Print("HUDVISIBILITYFLAGSACTIVE");
+
+
+//UnorderedSet<UInt32> s_gameLoadedInformedScripts;
+//
+//bool Cmd_GetGameLoadedFor_Execute(COMMAND_ARGS)
+//{
+//	//TESForm* scriptArg = NULL;
+//	//ExtractArgs(EXTRACT_ARGS, &scriptArg);
+//
+//	if (s_gameLoadedInformedScripts.HasKey(scriptObj->refID))
+//
+//	{
+//		Console_Print("HAS KEY.");
+//	
+//	}Console_Print("DONT HAVE KEY.");
+//
+//
+//
+//
+//	return true;
+
+
+	//ScriptVar* outX, * outY, * outZ;
+
+	//if (ExtractArgs(EXTRACT_ARGS_EX, &outX,&outX,&outX))
+	//{
+		//outX->data.num = thisObj->posX;
+		//outY->data.num = thisObj->posY;
+		//outZ->data.num = thisObj->posZ;
+	//	//setVarByName(scriptObj, eventList, outx, thisObj->posX);
+	//	//setVarByName(scriptObj, eventList, outy, thisObj->posY);
+	//	//setVarByName(scriptObj, eventList, outz, thisObj->posZ);
+	//}
