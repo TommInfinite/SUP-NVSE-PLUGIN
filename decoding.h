@@ -287,3 +287,224 @@ public:
 	//static HUDMainMenu* GetSingleton() { return *(HUDMainMenu**)(0x11D96C0); }
 };
 STATIC_ASSERT(sizeof(HUDMainMenu) == 0x278);
+
+
+
+
+//struct ActorHitData
+//{
+//	enum HitFlags
+//	{
+//		kFlag_TargetIsBlocking = 1,
+//		kFlag_TargetWeaponOut = 2,
+//		kFlag_IsCritical = 4,
+//		kFlag_OnDeathCritEffect = 8,
+//		kFlag_IsFatal = 0x10,
+//		kFlag_DismemberLimb = 0x20,
+//		kFlag_ExplodeLimb = 0x40,
+//		kFlag_CrippleLimb = 0x80,
+//		kFlag_BreakWeaponNonEmbedded = 0x100,
+//		kFlag_BreakWeaponEmbedded = 0x200,
+//		kFlag_IsSneakAttack = 0x400,
+//		kFlag_ArmorPenetrated = 0x80000000	// JIP only
+//	};
+//
+//	Actor* source;		// 00
+//	Actor* target;		// 04
+//	union								// 08
+//	{
+//		Projectile* projectile;
+//		Explosion* explosion;
+//	};
+//	UInt32				weaponAV;		// 0C
+//	SInt32				hitLocation;	// 10
+//	float				healthDmg;		// 14
+//	float				wpnBaseDmg;		// 18	Skill and weapon condition modifiers included
+//	float				fatigueDmg;		// 1C
+//	float				limbDmg;		// 20
+//	float				blockDTMod;		// 24
+//	float				armorDmg;		// 28
+//	float				flt2C;			// 2C
+//	TESObjectWEAP* weapon;		// 30
+//	float				healthPerc;		// 34
+//	NiVector3			impactPos;		// 38
+//	NiVector3			impactAngle;	// 44
+//	UInt32				unk50;			// 50
+//	void* ptr54;			// 54
+//	UInt32				flags;			// 58
+//	float				dmgMult;		// 5C
+//	SInt32				unk60;			// 60	Unused; rigged by CopyHitDataHook to store hitLocation
+//};
+
+template <typename Item> struct ListBoxItem //From JIP DECODING
+{
+	Tile* tile;
+	Item* object;
+};
+
+template <typename Item> class ListBox : public BSSimpleList<ListBoxItem<Item>> //From JIP DECODING
+{
+public:
+	Tile* parentTile;	// 0C
+	Tile* selected;		// 10
+	Tile* scrollBar;		// 14
+	const char* templateName;	// 18
+	UInt16			itemCount;		// 1C
+	UInt16			pad1E;			// 1E
+	float			flt20;			// 20
+	float			listIndex;		// 24
+	float			currValue;		// 28
+	UInt16			word2C;			// 2C
+	UInt16			pad2E;			// 2E
+
+	Item* GetSelected()
+	{
+		ListNode<ListBoxItem<Item>>* iter = list.Head();
+		ListBoxItem<Item>* item;
+		do
+		{
+			item = iter->data;
+			if (item && (item->tile == selected))
+				return item->object;
+		} 		while (iter = iter->next);
+		return NULL;
+	}
+
+	void Clear()
+	{
+		ListNode<ListBoxItem<Item>>* iter = list.Head();
+		ListBoxItem<Item>* item;
+		do
+		{
+			item = iter->data;
+			if (!item) continue;
+			if (item->tile)
+				item->tile->Destroy(true);
+			GameHeapFree(item);
+		} 		while (iter = iter->next);
+		list.RemoveAll();
+		selected = NULL;
+		itemCount = 0;
+	}
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class VATSMenu : public Menu			// 1056 From JIP DECODING
+{
+public:
+	virtual void		Unk_12(void);
+
+	enum ActionTypes
+	{
+		kAPCost_AttackUnarmed,
+		kAPCost_AttackOneHandMelee,
+		kAPCost_AttackTwoHandMelee,
+		kAPCost_AttackPistol,
+		kAPCost_AttackRifle,
+		kAPCost_AttackHandle,
+		kAPCost_AttackLauncher,
+		kAPCost_AttackGrenade,
+		kAPCost_AttackMine,
+		kAPCost_Reload,
+		kAPCost_Crouch,
+		kAPCost_Stand,
+		kAPCost_SwitchWeapon,
+		kAPCost_ToggleWeaponDrawn,
+		kAPCost_Heal,
+		kAPCost_OneHandThrown = 0x13,
+		kAPCost_AttackThrown,
+		kAPCost_MAX = 0x16,
+	};
+
+	UInt32				unk028;			// 028
+	TileImage* tile02C;		// 02C
+	TileImage* tile030;		// 030
+	TileImage* tile034;		// 034
+	TileImage* tile038;		// 038
+	TileImage* tile03C;		// 03C
+	TileImage* tile040;		// 040
+	TileImage* tile044;		// 044
+	TileImage* tile048;		// 048
+	TileImage* tile04C;		// 04C
+	TileImage* tile050;		// 050
+	TileText* tile054;		// 054
+	TileText* tile058;		// 058
+	TileText* tile05C;		// 05C
+	TileText* tile060;		// 060
+	TileImage* tile064;		// 064
+	TileImage* tile068;		// 068
+	TileImage* tile06C;		// 06C
+	TileImage* tile070;		// 070
+	TileText* tile074;		// 074
+	TileRect* tile078;		// 078
+	TileRect* tile07C;		// 07C
+	TileRect* tile080;		// 080
+	TileImage* tile084;		// 084
+	TileRect* tile088;		// 088
+	TileImage* tile08C;		// 08C
+	TileImage* tile090;		// 090
+	TileImage* tile094;		// 094
+	TileImage* tile098;		// 098
+	TileText* tile09C;		// 09C
+	TileImage* tile0A0;		// 0A0
+	TileImage* tile0A4;		// 0A4
+	UInt32				unk0A8[2];		// 0A8
+	ListBox<UInt32>		queuedActions;	// 0B0
+	float				actionPoints;	// 0E0
+	float				maxActionPoints;// 0E4
+	float				ClipAmmoMax;			// 0E8
+	float				reserveAmmoMax;			// 0EC
+	float				clipAmmo;		// 0F0
+	float				reserveAmmo;	// 0F4
+	UInt32				unk0F8;			// 0F8
+	float				flt0FC;			// 0FC
+	UInt32				unk100[7];		// 100
+	int					actionType;		// 11C
+	UInt8				isSuccess;		// 120
+	UInt8				byte121;		// 121
+	UInt8				isMysteriousStrangerVisit;	// 122
+	UInt8				byte123;		// 123
+	UInt8				remainingShotsToFire;	// 124
+	UInt8				count125;		// 125
+	UInt8				pad126[2];		// 126
+	TESObjectREFR* targetRef;		// 128
+	UInt32				avCode;			// 12C
+	//ActorHitData* hitData;		// 130
+	float				unk134;			// 134
+	float				unk138;			// 138
+	float				apCost;			// 13C
+	UInt8				isMissFortuneVisit;	// 140
+	UInt8				pad141[3];		// 141
+};
+//STATIC_ASSERT(sizeof(VATSMenu) == 0x144);

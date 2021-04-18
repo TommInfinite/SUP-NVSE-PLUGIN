@@ -174,6 +174,8 @@ ParamInfo kParams_Tomm_TwoFloats_TwoScriptVars_TwoFloats[6] =
 };
 
 
+
+
 ParamInfo kParams_Tomm_TwoScriptVarsOptional[2] =
 {
 	{"Variable", kParamType_ScriptVariable, 1},
@@ -339,3 +341,7 @@ ParamInfo kParams_Tomm_ObjectRef[1] =
 };
 
 
+static ParamInfo kParams_Tomm_OneActorRef[1] = // from jip
+{
+	{	"actor reference",	kParamType_Actor,	0	},
+};

@@ -30,6 +30,7 @@
 
 
 
+
 #ifndef RegisterScriptCommand
 #define RegisterScriptCommand(name) 	nvse->RegisterCommand(&kCommandInfo_ ##name);
 #endif
@@ -55,11 +56,16 @@ TileMenu** g_tileMenuArray = NULL;
 UInt32 g_screenWidth = 0;
 UInt32 g_screenHeight = 0;
 PlayerCharacter* g_ThePlayer = NULL;
+Tile* g_kMenuRoot = NULL;
+Tile* g_Cursor = NULL;
+
 //PlayerCharacter* g_ThePlayer = *(PlayerCharacter**)0x11DEA3C;
 //VATSCameraData* g_VATSCameraData = (VATSCameraData*)0x11F2250; // From JIP
+VATSMenu** g_VATSMenu = (VATSMenu**)0x11DB0D4;
 UInt32 SUPNVSEVersion = 130;
 #define NUM_ARGS *((UInt8*)scriptData + *opcodeOffsetPtr)
-bool b_MouseInput = true;
+#define REFR_RES *(UInt32*)result // From JIP
+//bool b_MouseInput = true;
 
 //SETTINGS
 int bTFCPosOnLoadFix = 0;
@@ -291,7 +297,12 @@ void MessageHandler(NVSEMessagingInterface::Message* msg)
 		g_screenWidth = *(UInt32*)0x11C73E0; // From JiP's patches game
 		g_screenHeight = *(UInt32*)0x11C7190; // From JiP's patches game
 		g_ThePlayer = *(PlayerCharacter**)0x11DEA3C; // From JIP
+		g_kMenuRoot = g_interfaceManager->menuRoot;
+		g_Cursor = g_interfaceManager->cursor;
 		
+		//WriteRelJump(0xA23252, 0xA23296);
+
+
 
 		CALL_MEMBER_FN(SaveGameManager::GetSingleton(), ConstructSavegamePath)(SavegameFolder);
 		OnDeferredInit();
@@ -311,8 +322,9 @@ void MessageHandler(NVSEMessagingInterface::Message* msg)
 }
 
 
-#include "Tomm_fn_Misc.h"
+
 #include "Tomm_fn_UI.h"
+#include "Tomm_fn_Misc.h"
 #include "Tomm_fn_TFC.h"
 #include "Tomm_fn_Screenshot.h"
 #include "Tomm_fn_INI.h"
@@ -483,7 +495,9 @@ bool NVSEPlugin_Load(const NVSEInterface* nvse)
 	/*48*/REG_CMD_ARR(SetFloatsFromArray, Array);
 	/*49*/REG_CMD_ARR(ReadINISectionsFromFile, Array);
 	/*50*/REG_CMD_ARR(ReadINISectionKeysFromFile, Array);
-
+	/*51*/RegisterScriptCommand(GetMousePosition);
+	/*52*/RegisterScriptCommand(FakeMouseMovement);
+	
 	///*43*/RegisterScriptCommand(SUPPlayMP3File);
 	//RegisterScriptCommand(ToggleMouseInput);
 	//RegisterScriptCommand(GetUITraitValueType);
