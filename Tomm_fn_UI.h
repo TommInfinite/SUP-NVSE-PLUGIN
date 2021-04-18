@@ -192,61 +192,40 @@ bool Cmd_DumpTileInfo_Execute(COMMAND_ARGS) // used as debugging function so don
 
 
 bool Cmd_DumpTileInfoAll_Execute(COMMAND_ARGS)
-
-
 {
-
 	UInt32 iToFile = 0;
-	Tile* component = g_interfaceManager->menuRoot;
-	Tile* component2 = g_interfaceManager->cursor;
-
 	if (ExtractArgsEx(EXTRACT_ARGS_EX, &iToFile))
 	{
-
 		if (iToFile == 1)
 		{
-
-			if (component)
+			if (g_kMenuRoot)
 			{
-				_MESSAGE("Dumping ALL menus.");
-				component->DumpAlt();
+				_MESSAGE("<<Dumping ALL menus>>");
+				g_kMenuRoot->DumpAlt();
 			}
 
-			if (component2)
+			if (g_Cursor)
 			{
-				_MESSAGE("Dumping Cursor.");
-				component2->DumpAlt();
+				_MESSAGE("<<Dumping Cursor>>");
+				g_Cursor->DumpAlt();
 			}
 
 
 		}else
 		{
-
-			if (component)
+			if (g_kMenuRoot)
 			{
-				Console_Print("Dumping ALL menus.");
-				component->Dump();
+				Console_Print("<<Dumping ALL menus>>");
+				g_kMenuRoot->Dump();
 			}
-
-			if (component2)
+			if (g_Cursor)
 			{
-				Console_Print("Dumping Cursor.");
-				component2->Dump();
+				Console_Print("<<Dumping Cursor>>");
+				g_Cursor->Dump();
 			}
-
-
 		}
-
 	}
-
-
-
-
-
-
 	return true;
-
-
 }
 
 
@@ -261,19 +240,18 @@ bool Cmd_GetScreenTrait_Execute(COMMAND_ARGS)
 {
 	UInt32 iTrait = -1;
 	Tile::Value* val = 0;
-	Tile* component = g_interfaceManager->menuRoot;
 	if (ExtractArgsEx(EXTRACT_ARGS_EX, &iTrait))
 	{
-		if (component)
+		if (g_kMenuRoot)
 		{
 			switch (iTrait)
 			{
 			case 0:
-				val = component->GetValue(kTileValue_width);
+				val = g_kMenuRoot->GetValue(kTileValue_width);
 				*result = val->num;
 				break;
 			case 1:
-				val = component->GetValue(kTileValue_height);
+				val = g_kMenuRoot->GetValue(kTileValue_height);
 				*result = val->num;
 				break;
 			case 2:
@@ -283,7 +261,7 @@ bool Cmd_GetScreenTrait_Execute(COMMAND_ARGS)
 				*result = g_screenHeight;
 				break;
 			case 4:
-				val = component->GetValue(kTileValue_resolutionconverter);
+				val = g_kMenuRoot->GetValue(kTileValue_resolutionconverter);
 				*result = val->num;
 				break;
 			}
@@ -302,36 +280,35 @@ bool Cmd_GetCursorTrait_Execute(COMMAND_ARGS) ////////////Concept taken from JiP
 	*result = 0;
 	UInt32 iTrait = -1;
 	Tile::Value* val = 0;
-	Tile* component = g_interfaceManager->cursor;
 	const char* resStr = NULL;
 	if (ExtractArgsEx(EXTRACT_ARGS_EX, &iTrait))
 	{
-		if (component)
+		if (g_Cursor)
 		{
 			switch (iTrait)
 			{
 			case 0:
-				val = component->GetValue(kTileValue_alpha);
+				val = g_Cursor->GetValue(kTileValue_alpha);
 				*result = val->num;
 				break;
 			case 1:
-				val = component->GetValue(kTileValue_width);
+				val = g_Cursor->GetValue(kTileValue_width);
 				*result = val->num;
 				break;
 			case 2:
-				val = component->GetValue(kTileValue_height);
+				val = g_Cursor->GetValue(kTileValue_height);
 				*result = val->num;
 				break;
 			case 3:
-				val = component->GetValue(kTileValue_red);
+				val = g_Cursor->GetValue(kTileValue_red);
 				*result = val->num;
 				break;
 			case 4:
-				val = component->GetValue(kTileValue_green);
+				val = g_Cursor->GetValue(kTileValue_green);
 				*result = val->num;
 				break;
 			case 5:
-				val = component->GetValue(kTileValue_blue);
+				val = g_Cursor->GetValue(kTileValue_blue);
 				*result = val->num;
 				break;
 			}
@@ -358,30 +335,29 @@ bool Cmd_SetCursorTrait_Execute(COMMAND_ARGS) ////////////Concept taken from JiP
 	UInt32 iTrait;
 	float fValue;
 	Tile::Value* val = 0;
-	Tile* component = g_interfaceManager->cursor;
 	if (ExtractArgsEx(EXTRACT_ARGS_EX, &iTrait, &fValue))
 	{
-		if (component)
+		if (g_Cursor)
 		{
 			switch (iTrait)
 			{
 			case 0:
-				component->SetFloat(kTileValue_alpha, fValue);
+				g_Cursor->SetFloat(kTileValue_alpha, fValue);
 				break;
 			case 1:
-				component->SetFloat(kTileValue_width, fValue);
+				g_Cursor->SetFloat(kTileValue_width, fValue);
 				break;
 			case 2:
-				component->SetFloat(kTileValue_height, fValue);
+				g_Cursor->SetFloat(kTileValue_height, fValue);
 				break;
 			case 3:
-				component->SetFloat(kTileValue_red, fValue);
+				g_Cursor->SetFloat(kTileValue_red, fValue);
 				break;
 			case 4:
-				component->SetFloat(kTileValue_green, fValue);
+				g_Cursor->SetFloat(kTileValue_green, fValue);
 				break;
 			case 5:
-				component->SetFloat(kTileValue_blue, fValue);
+				g_Cursor->SetFloat(kTileValue_blue, fValue);
 				break;
 
 			}
@@ -398,32 +374,31 @@ bool Cmd_SetCursorTraitGradual_Execute(COMMAND_ARGS) ////////////SetUIFloatGradu
 	UInt32 iTrait,iMode, iNumArgs =NUM_ARGS;
 	float fStartVal,fEndVal,fSec;
 	Tile::Value* val = 0;
-	Tile* component = g_interfaceManager->cursor;
 	if (ExtractArgsEx(EXTRACT_ARGS_EX,&iTrait, &fStartVal, &fEndVal, &fSec, &iMode))
 	{
-		if (component)
+		if (g_Cursor)
 		{
 			if (iNumArgs >1)
 			{
 				switch (iTrait)
 				{
 				case 0:
-					component->GradualSetFloat(kTileValue_alpha, fStartVal, fEndVal, fSec, iMode);
+					g_Cursor->GradualSetFloat(kTileValue_alpha, fStartVal, fEndVal, fSec, iMode);
 					break;
 				case 1:
-					component->GradualSetFloat(kTileValue_width, fStartVal, fEndVal, fSec, iMode);
+					g_Cursor->GradualSetFloat(kTileValue_width, fStartVal, fEndVal, fSec, iMode);
 					break;
 				case 2:
-					component->GradualSetFloat(kTileValue_height, fStartVal, fEndVal, fSec, iMode);
+					g_Cursor->GradualSetFloat(kTileValue_height, fStartVal, fEndVal, fSec, iMode);
 					break;
 				case 3:
-					component->GradualSetFloat(kTileValue_red, fStartVal, fEndVal, fSec, iMode);
+					g_Cursor->GradualSetFloat(kTileValue_red, fStartVal, fEndVal, fSec, iMode);
 					break;
 				case 4:
-					component->GradualSetFloat(kTileValue_green, fStartVal, fEndVal, fSec, iMode);
+					g_Cursor->GradualSetFloat(kTileValue_green, fStartVal, fEndVal, fSec, iMode);
 					break;
 				case 5:
-					component->GradualSetFloat(kTileValue_blue, fStartVal, fEndVal, fSec, iMode);
+					g_Cursor->GradualSetFloat(kTileValue_blue, fStartVal, fEndVal, fSec, iMode);
 					break;
 				}
 			}
@@ -431,22 +406,22 @@ bool Cmd_SetCursorTraitGradual_Execute(COMMAND_ARGS) ////////////SetUIFloatGradu
 				switch (iTrait)
 				{
 				case 0:
-					ThisCall(0xA07DC0, component, kTileValue_alpha);
+					ThisCall(0xA07DC0, g_Cursor, kTileValue_alpha);
 					break;
 				case 1:
-					ThisCall(0xA07DC0, component, kTileValue_width);
+					ThisCall(0xA07DC0, g_Cursor, kTileValue_width);
 					break;
 				case 2:
-					ThisCall(0xA07DC0, component, kTileValue_height);
+					ThisCall(0xA07DC0, g_Cursor, kTileValue_height);
 					break;
 				case 3:
-					ThisCall(0xA07DC0, component, kTileValue_red);
+					ThisCall(0xA07DC0, g_Cursor, kTileValue_red);
 					break;
 				case 4:
-					ThisCall(0xA07DC0, component, kTileValue_green);
+					ThisCall(0xA07DC0, g_Cursor, kTileValue_green);
 					break;
 				case 5:
-					ThisCall(0xA07DC0, component, kTileValue_blue);
+					ThisCall(0xA07DC0, g_Cursor, kTileValue_blue);
 					break;
 				}
 			}

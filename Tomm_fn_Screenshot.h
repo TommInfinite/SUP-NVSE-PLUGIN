@@ -441,3 +441,4 @@ bool Cmd_CaptureScreenshot_Execute(COMMAND_ARGS)
 	return true;
 
 }
+

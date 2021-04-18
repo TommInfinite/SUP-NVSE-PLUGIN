@@ -25,9 +25,12 @@ DEFINE_COMMAND_PLUGIN(IsNumberNAN, "", 0, 1, kParams_Tomm_OneFloatOptional)
 DEFINE_COMMAND_PLUGIN(GetDistanceBetweenPoints, "", 0, 6, kParams_Tomm_SixFloats)
 DEFINE_COMMAND_PLUGIN(GetCalculatedPosFrame, "", 0, 10, kParams_Tomm_SevenFloats_ThreeScriptVars)
 DEFINE_COMMAND_PLUGIN(GetCalculatedPosAlt, "Gets current PosXYZ", 0, 6, kParams_Tomm_TwoFloats_TwoScriptVars_TwoFloats)
-//DEFINE_COMMAND_PLUGIN(SUPPlayMP3File, "Get file size", 0, 1, kParams_Tomm_OneString)
 DEFINE_COMMAND_PLUGIN(ReadINIStringFromFile, "", 0, 3, kParams_Tomm_ThreeStrings)
 DEFINE_COMMAND_PLUGIN(SetFloatsFromArray, "", 0, 11, kParams_Tomm_SetFloatsFromArray)
+DEFINE_COMMAND_PLUGIN(GetMousePosition, "", 0, 2, kParams_Tomm_TwoScriptVars)
+DEFINE_COMMAND_PLUGIN(FakeMouseMovement, "", 0, 2, kParams_Tomm_TwoFloats)
+
+
 
 
 
@@ -728,14 +731,87 @@ bool Cmd_GetCalculatedPosFrame_Execute(COMMAND_ARGS) //Fallout2AM
 	return true;
 }
 
+void MouseMove(float x, float y)
+{
+	INPUT  Input = { 0 };
+	Input.type = INPUT_MOUSE;
+	Input.mi.dwFlags = MOUSEEVENTF_MOVE;
+	Input.mi.dx = x;
+	Input.mi.dy = y;
+	::SendInput(1, &Input, sizeof(INPUT));
+}
+
+
+bool Cmd_FakeMouseMovement_Execute(COMMAND_ARGS)
+{
+	float ChangeX, ChangeY;
+	if (ExtractArgsEx(EXTRACT_ARGS_EX, &ChangeX, &ChangeY))
+	{
+		MouseMove(ChangeX, ChangeY);
+		return true;
+	}
+}
+
+
+
+
 
 bool Cmd_SUPTest_Execute(COMMAND_ARGS)
 {
+
 
 	return true;
 }
 
 
+
+bool Cmd_GetMousePosition_Execute(COMMAND_ARGS)
+{
+	ScriptVar* outX, * outY;
+	if (ExtractArgsEx(EXTRACT_ARGS_EX, &outX, &outY))
+	{
+		POINT p;
+		if (GetCursorPos(&p))
+		{
+			outX->data.num = p.x;
+			outY->data.num = p.y;
+		}
+	}
+	return true;
+}
+
+//int xPos = GET_X_LPARAM(lParam);
+//int yPos = GET_Y_LPARAM(lParam);
+
+	//Console_Print("%s %d", "X>>", xPos);
+	//Console_Print("%s %d", "Y>>", yPos);
+
+
+
+
+
+
+//bool Cmd_SUPTestVATS_Execute(COMMAND_ARGS)
+//{
+//	UInt32 menuID = 1056;
+//	TileMenu* tileMenu = g_tileMenuArray[menuID - kMenuType_Min];
+//	Menu* menu = tileMenu ? tileMenu->menu : NULL;
+//
+//	TESForm* menuRef = NULL;
+//	VATSMenu* VATSMenuActual = (VATSMenu*)menu;
+//	menuRef = VATSMenuActual->targetRef;
+//	REFR_RES = menuRef->refID;
+//
+//	Actor* target;
+//
+//	if (ExtractArgsEx(EXTRACT_ARGS_EX, &target))
+//	{
+//		VATSMenuActual->targetRef = target;
+//		Console_Print("%s %d", "TargetSet>>", 1);
+//	}
+//
+//	return true;
+//}
 
 
 
@@ -804,6 +880,75 @@ bool Cmd_SetFloatsFromArray_Execute(COMMAND_ARGS)
 
 
 
+
+//*result = g_ThePlayer->pcControlFlags;
+//g_ThePlayer->pcControlFlags = 13;
+
+
+//UInt32 menuID = 1056;
+//TileMenu* tileMenu = g_tileMenuArray[menuID - kMenuType_Min];
+//Menu* menu = tileMenu ? tileMenu->menu : NULL;
+
+//TESForm* menuRef = NULL;
+//VATSMenu* VATSMenuActual = (VATSMenu*)menu;
+
+//VATSMenuActual->tile02C->Dump();		// 02C
+//VATSMenuActual->tile030->Dump();		// 030
+//VATSMenuActual->tile034->Dump();		// 034
+//VATSMenuActual->tile038->Dump();		// 038
+//VATSMenuActual->tile03C->Dump();		// 03C
+//VATSMenuActual->tile040->Dump();		// 040
+//VATSMenuActual->tile044->Dump();		// 044
+//VATSMenuActual->tile048->Dump();		// 048
+//VATSMenuActual->tile04C->Dump();		// 04C
+//VATSMenuActual->tile050->Dump();		// 050
+//VATSMenuActual->tile054->Dump();		// 054
+//VATSMenuActual->tile058->Dump();		// 058
+//VATSMenuActual->tile05C->Dump();		// 05C
+//VATSMenuActual->tile060->Dump();		// 060
+//VATSMenuActual->tile064->Dump();		// 064
+//VATSMenuActual->tile068->Dump();		// 068
+//VATSMenuActual->tile06C->Dump();		// 06C
+//VATSMenuActual->tile070->Dump();		// 070
+//VATSMenuActual->tile074->Dump();		// 074
+////TileRect* tile078->Dump();		// 078
+////TileRect* tile07C->Dump();		// 07C
+////TileRect* tile080->Dump();		// 080
+//VATSMenuActual->tile084->Dump();		// 084
+////TileRect* tile088->Dump();		// 088
+//VATSMenuActual->tile08C->Dump();		// 08C
+//VATSMenuActual->tile090->Dump();		// 090
+//VATSMenuActual->tile094->Dump();		// 094
+//VATSMenuActual->tile098->Dump();		// 098
+//VATSMenuActual->tile09C->Dump();		// 09C
+//VATSMenuActual->tile0A0->Dump();		// 0A0
+//VATSMenuActual->tile0A4->Dump();		// 0A4
+
+//float fResult = VATSMenuActual->isMissFortuneVisit;
+//*result = fResult;
+//REFR_RES = VATSMenuActual->targetRef->refID;
+
+//TESObjectREFR* targetRef = g_VATSMenu->targetRef;
+//float ClipAmmoMax = VATSMenuActual->ClipAmmoMax;
+//float reserveAmmo = VATSMenuActual->reserveAmmo;
+//float clipAmmo = VATSMenuActual->clipAmmo;
+//float reserveAmmoMax = VATSMenuActual->reserveAmmoMax;
+//UInt8 byte121 = VATSMenuActual->byte121;
+//UInt8 byte123 = VATSMenuActual->byte123;
+
+//UInt32 avCode = VATSMenuActual->avCode;
+//float flt0FC = VATSMenuActual->flt0FC;
+//int actionType = VATSMenuActual->actionType;
+//Console_Print("%s %f", "ClipAmmoMax>>", ClipAmmoMax);
+//Console_Print("%s %f", "reserveAmmo>>", reserveAmmo);
+//Console_Print("%s %f", "clipAmmo>>", clipAmmo);
+//Console_Print("%s %f", "reserveAmmoMax>>", reserveAmmoMax);
+//Console_Print("%s %d", "avCode>>", avCode);
+//Console_Print("%s %f", "flt0FC>>", flt0FC);
+//Console_Print("%s %d", "actionType>>", actionType);
+
+//Console_Print("%s %d", "byte121>>", byte121);
+//Console_Print("%s %d", "byte123>>", byte123);
 
 
 
