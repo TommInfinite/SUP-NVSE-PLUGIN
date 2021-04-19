@@ -15,6 +15,7 @@
 #include "nvse\nvse\GameSettings.h"
 #include "nvse\nvse\SafeWrite.h"
 #include <string>
+#include "nvse/GameProcess.h"
 
 
 #include <windows.h>
@@ -47,8 +48,8 @@ NVSECommandTableInterface* g_cmdTable;
 const CommandInfo* g_TFC;
 
 bool (*ExtractArgsEx)(COMMAND_ARGS_EX, ...);
-
-
+CommandInfo* (*GetCmdByOpcode)(UInt32 opcode);
+Cmd_Execute KillActor;
 NVSEStringVarInterface* StrIfc = NULL;
 HUDMainMenu* g_HUDMainMenu = NULL;
 InterfaceManager* g_interfaceManager = NULL;
@@ -62,9 +63,11 @@ Tile* g_Cursor = NULL;
 //PlayerCharacter* g_ThePlayer = *(PlayerCharacter**)0x11DEA3C;
 //VATSCameraData* g_VATSCameraData = (VATSCameraData*)0x11F2250; // From JIP
 VATSMenu** g_VATSMenu = (VATSMenu**)0x11DB0D4;
+ProcessManager* g_processManager = (ProcessManager*)0x11E0E80; // From JiP
 UInt32 SUPNVSEVersion = 130;
 #define NUM_ARGS *((UInt8*)scriptData + *opcodeOffsetPtr)
 #define REFR_RES *(UInt32*)result // From JIP
+#define IS_ACTOR(form) ((*(UInt32**)form)[0x40] == 0x8D0360) // From JIP
 //bool b_MouseInput = true;
 
 //SETTINGS
@@ -114,6 +117,49 @@ char SavedSGPathNVSE[0x4000] = "NULL";
 char FalloutFolderPath[0x4000] = "NULL";
 
 /// //////////////////////////
+
+
+//__declspec(naked) float __vectorcall GetDistance3D(TESObjectREFR* ref1, TESObjectREFR* ref2) // From JIP
+//{
+//	__asm
+//	{
+//		movups	xmm0, [ecx + 0x30]
+//		movups	xmm1, [edx + 0x30]
+//		subps	xmm0, xmm1
+//		mulps	xmm0, xmm0
+//		movhlps	xmm1, xmm0
+//		addss	xmm1, xmm0
+//		psrlq	xmm0, 0x20
+//		addss	xmm1, xmm0
+//		sqrtss	xmm0, xmm1
+//		retn
+//	}
+//}
+
+//__declspec(naked) float __vectorcall TESObjectREFR::GetDistance(TESObjectREFR* target)
+//{
+//	__asm
+//	{
+//		push	ecx
+//		push	edx
+//		call	TESObjectREFR::GetInSameCellOrWorld
+//		pop		edx
+//		pop		ecx
+//		test	al, al
+//		jz		fltMax
+//		jmp		GetDistance3D
+//		fltMax :
+//		movss	xmm0, kFltMax
+//			retn
+//	}
+//}
+
+
+__declspec(naked) bool KillActorExecute(COMMAND_ARGS)
+{
+	__asm	jmp		KillActor
+}
+
 
 
 
@@ -299,6 +345,7 @@ void MessageHandler(NVSEMessagingInterface::Message* msg)
 		g_ThePlayer = *(PlayerCharacter**)0x11DEA3C; // From JIP
 		g_kMenuRoot = g_interfaceManager->menuRoot;
 		g_Cursor = g_interfaceManager->cursor;
+		KillActor = GetCmdByOpcode(0x108B)->execute;
 		
 		//WriteRelJump(0xA23252, 0xA23296);
 
@@ -417,8 +464,10 @@ bool NVSEPlugin_Load(const NVSEInterface* nvse)
 	g_messagingInterface->RegisterListener(g_pluginHandle, "NVSE", MessageHandler);
 
 
-
+	NVSECommandTableInterface* cmdTable = (NVSECommandTableInterface*)nvse->QueryInterface(kInterface_CommandTable);
+	GetCmdByOpcode = cmdTable->GetByOpcode;
 	
+
 
 	_MESSAGE("SUPNVSE Version: %d", SUPNVSEVersion);
 
@@ -497,7 +546,12 @@ bool NVSEPlugin_Load(const NVSEInterface* nvse)
 	/*50*/REG_CMD_ARR(ReadINISectionKeysFromFile, Array);
 	/*51*/RegisterScriptCommand(GetMousePosition);
 	/*52*/RegisterScriptCommand(FakeMouseMovement);
-	
+	/*53*/RegisterScriptCommand(GetGrenadeTimeHeld);
+	/*54*/RegisterScriptCommand(IsPlayerOverencumbered);
+	/*54*/RegisterScriptCommand(SetCaughtPCPickpocketting);
+	/*55*/RegisterScriptCommand(KillAll2);
+	//*20*/REG_CMD_ARR(SupTestArray, Array);
+
 	///*43*/RegisterScriptCommand(SUPPlayMP3File);
 	//RegisterScriptCommand(ToggleMouseInput);
 	//RegisterScriptCommand(GetUITraitValueType);

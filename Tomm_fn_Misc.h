@@ -29,6 +29,11 @@ DEFINE_COMMAND_PLUGIN(ReadINIStringFromFile, "", 0, 3, kParams_Tomm_ThreeStrings
 DEFINE_COMMAND_PLUGIN(SetFloatsFromArray, "", 0, 11, kParams_Tomm_SetFloatsFromArray)
 DEFINE_COMMAND_PLUGIN(GetMousePosition, "", 0, 2, kParams_Tomm_TwoScriptVars)
 DEFINE_COMMAND_PLUGIN(FakeMouseMovement, "", 0, 2, kParams_Tomm_TwoFloats)
+DEFINE_COMMAND_PLUGIN(GetGrenadeTimeHeld, "", 0, 0, NULL)
+DEFINE_COMMAND_PLUGIN(IsPlayerOverencumbered, "", 0, 0, NULL)
+DEFINE_COMMAND_PLUGIN(SetCaughtPCPickpocketting, "", 1, 1, kParams_Tomm_OneIntOptional)
+DEFINE_COMMAND_PLUGIN(SupTestArray, "", 0, 0, NULL)
+DEFINE_COMMAND_PLUGIN(KillAll2, "", 0, 0, NULL)
 
 
 
@@ -753,12 +758,96 @@ bool Cmd_FakeMouseMovement_Execute(COMMAND_ARGS)
 }
 
 
-
-
-
 bool Cmd_SUPTest_Execute(COMMAND_ARGS)
 {
 
+	//g_ThePlayer->ToggleFirstPerson(1);
+	return true;
+}
+
+bool Cmd_KillAll2_Execute(COMMAND_ARGS)
+{
+	UInt32 count;
+	Actor* actor;
+	CombatActors* cmbActors = g_ThePlayer->combatActors;
+	if (!cmbActors) return true;
+
+	CombatTarget* targets = cmbActors->targets.data;
+	for (count = cmbActors->targets.size; count; count--, targets++)
+	{
+		actor = targets->target;
+		if ((actor) && IS_ACTOR(actor))
+		{
+			KillActorExecute(paramInfo, scriptData, actor, containingObj, scriptObj, eventList, result, opcodeOffsetPtr);
+		}
+	}
+	return true;
+}
+
+
+
+
+
+
+bool Cmd_SupTestArray_Execute(COMMAND_ARGS)
+{
+
+	NVSEArrayVar* MarkArr = ArrIfc->CreateArray(NULL, 0, scriptObj);
+	*result = 0;
+
+	MobileObject** objArray = g_processManager->objects.data, ** arrEnd = objArray;
+	objArray += g_processManager->beginOffsets[0];
+	arrEnd += g_processManager->endOffsets[0];
+	Actor* actor;
+
+
+	for (; objArray != arrEnd; objArray++)
+	{
+		actor = (Actor*)*objArray;
+		if (actor && IS_ACTOR(actor))
+			ArrIfc->AppendElement(MarkArr, NVSEArrayElement(actor));
+	}
+
+	ArrIfc->AssignCommandResult(MarkArr, result);
+	return true;
+
+}
+
+
+
+
+
+
+
+
+bool Cmd_SetCaughtPCPickpocketting_Execute(COMMAND_ARGS) // From JiP
+{
+	int iSet;
+	Actor* actor = (Actor*)thisObj;
+	if (ExtractArgsEx(EXTRACT_ARGS_EX, &iSet))
+	{
+		if (NUM_ARGS > 0)
+		{
+			((Actor*)thisObj)->baseProcess->SetHasCaughtPlayerPickpocketting(iSet);
+		}
+		else
+		{
+			bool iCaught = ((Actor*)thisObj)->baseProcess->GetHasCaughtPlayerPickpocketting(); 
+			*result = iCaught;
+		}
+	}
+	return true;
+}
+
+
+
+
+
+
+
+bool Cmd_IsPlayerOverencumbered_Execute(COMMAND_ARGS)
+{
+	*result = g_ThePlayer->Unk_D6(); // From JiP
 
 	return true;
 }
@@ -876,6 +965,87 @@ bool Cmd_SetFloatsFromArray_Execute(COMMAND_ARGS)
 
 
 }
+
+
+bool Cmd_GetGrenadeTimeHeld_Execute(COMMAND_ARGS)
+{
+	*result = g_ThePlayer->timeGrenadeHeld;
+	return true;
+}
+
+
+
+
+
+//void InitCmdPatches()
+//{
+//	CommandInfo* cmdInfo = GetCmdByOpcode(0x1024);
+//	cmdInfo->execute = Hook_MenuMode_Execute;
+//	cmdInfo->eval = (Cmd_Eval)Hook_MenuMode_Eval;
+//	cmdInfo = GetCmdByOpcode(0x102F);
+//	cmdInfo->execute = Hook_GetItemCount_Execute;
+//	cmdInfo->eval = (Cmd_Eval)Hook_GetItemCount_Eval;
+//	cmdInfo = GetCmdByOpcode(0x10CF);
+//	cmdInfo->execute = Hook_GetContainer_Execute;
+//	cmdInfo = GetCmdByOpcode(0x1174);
+//	cmdInfo->execute = Hook_IsInList_Execute;
+//	cmdInfo->eval = (Cmd_Eval)Hook_IsInList_Eval;
+//	cmdInfo = GetCmdByOpcode(0x1187);
+//	cmdInfo->execute = Hook_GetHitLocation_Execute;
+//	cmdInfo = GetCmdByOpcode(0x11C1);
+//	cmdInfo->execute = Hook_HasPerk_Execute;
+//	cmdInfo->eval = (Cmd_Eval)Hook_HasPerk_Eval;
+//	cmdInfo = GetCmdByOpcode(0x127D);
+//	cmdInfo->execute = Cmd_GetNVSEVersionFull_Execute;
+//	cmdInfo = GetCmdByOpcode(0x1403);
+//	cmdInfo->execute = Hook_GetBaseObject_Execute;
+//	cmdInfo = GetCmdByOpcode(0x1453);
+//	cmdInfo->execute = Hook_IsKeyPressed_Execute;
+//	cmdInfo->eval = (Cmd_Eval)Hook_IsKeyPressed_Eval;
+//	cmdInfo = GetCmdByOpcode(0x1462);
+//	cmdInfo->execute = Hook_DisableControl_Execute;
+//	cmdInfo = GetCmdByOpcode(0x1463);
+//	cmdInfo->execute = Hook_EnableControl_Execute;
+//	cmdInfo = GetCmdByOpcode(0x1464);
+//	cmdInfo->execute = Hook_TapControl_Execute;
+//	cmdInfo = GetCmdByOpcode(0x146A);
+//	cmdInfo->execute = Hook_IsControlDisabled_Execute;
+//	cmdInfo = GetCmdByOpcode(0x146B);
+//	cmdInfo->execute = Hook_IsControlPressed_Execute;
+//	cmdInfo->eval = (Cmd_Eval)Hook_IsControlPressed_Eval;
+//	cmdInfo = GetCmdByOpcode(0x149A);
+//	cmdInfo->execute = Hook_GetNumericGameSetting_Execute;
+//	cmdInfo = GetCmdByOpcode(0x149B);
+//	cmdInfo->execute = Hook_SetNumericGameSetting_Execute;
+//	cmdInfo->params = kParams_JIP_OneString_OneDouble;
+//	cmdInfo = GetCmdByOpcode(0x149C);
+//	cmdInfo->execute = Hook_GetNumericINISetting_Execute;
+//	cmdInfo = GetCmdByOpcode(0x149D);
+//	cmdInfo->execute = Hook_SetNumericINISetting_Execute;
+//	cmdInfo->params = kParams_JIP_OneString_OneDouble;
+//	cmdInfo = GetCmdByOpcode(0x1511);
+//	cmdInfo->execute = Hook_IsRefInList_Execute;
+//	cmdInfo->eval = (Cmd_Eval)Hook_IsRefInList_Eval;
+//	cmdInfo = GetCmdByOpcode(0x152D);
+//	cmdInfo->execute = Hook_Update3D_Execute;
+//	cmdInfo = GetCmdByOpcode(0x158D);
+//	cmdInfo->execute = Hook_ActorValueToStringC_Execute;
+//	cmdInfo = GetCmdByOpcode(0x15DF);
+//	IsPluginInstalled = cmdInfo->execute;
+//	cmdInfo->execute = Hook_IsPluginInstalled_Execute;
+//	cmdInfo = GetCmdByOpcode(0x15E0);
+//	GetPluginVersion = cmdInfo->execute;
+//	cmdInfo->execute = Hook_GetPluginVersion_Execute;
+//
+//	SayTo = GetCmdByOpcode(0x1034)->execute;
+//	KillActor = GetCmdByOpcode(0x108B)->execute;
+//	AddNote = GetCmdByOpcode(0x117C)->execute;
+//	AttachAshPile = GetCmdByOpcode(0x1211)->execute;
+//	GetRefs = GetCmdByOpcode(0x15C7)->execute;
+//
+//	PrintLog("> Command patches initialized successfully.\n");
+//}
+
 
 
 
