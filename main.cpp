@@ -26,6 +26,9 @@
 #include <common\SimpleIni.h>
 #include <cmath>
 #include <iostream>
+#include <nvse/nvse/GameData.h>
+
+
 
 
 
@@ -59,6 +62,7 @@ UInt32 g_screenHeight = 0;
 PlayerCharacter* g_ThePlayer = NULL;
 Tile* g_kMenuRoot = NULL;
 Tile* g_Cursor = NULL;
+DataHandler* g_dataHandler = nullptr; // from JG
 
 //PlayerCharacter* g_ThePlayer = *(PlayerCharacter**)0x11DEA3C;
 //VATSCameraData* g_VATSCameraData = (VATSCameraData*)0x11F2250; // From JIP
@@ -68,6 +72,7 @@ UInt32 SUPNVSEVersion = 130;
 #define NUM_ARGS *((UInt8*)scriptData + *opcodeOffsetPtr)
 #define REFR_RES *(UInt32*)result // From JIP
 #define IS_ACTOR(form) ((*(UInt32**)form)[0x40] == 0x8D0360) // From JIP
+#define GetRandomIntInRange(iMin, iMax) ThisCall<SInt32, SInt32>(0xAA5230, (void*)0x11C4180, iMax - iMin) + iMin // From JIP
 //bool b_MouseInput = true;
 
 //SETTINGS
@@ -90,10 +95,23 @@ typedef NVSEArrayVarInterface::Array NVSEArrayVar;
 typedef NVSEArrayVarInterface::Element NVSEArrayElement;
 
 
+
 Tile* InterfaceManager::GetActiveTile() //proably from JiP
 {
 	return activeTile ? activeTile : activeTileAlt;
 }
+
+
+UInt8 TESForm::GetOverridingModIdx()
+{
+	ModInfo* info = mods.GetLastItem();
+	return info ? info->modIndex : 0xFF;
+}
+
+
+
+
+
 
 // SaveFileVars
 //////////////////////////////
@@ -119,22 +137,22 @@ char FalloutFolderPath[0x4000] = "NULL";
 /// //////////////////////////
 
 
-//__declspec(naked) float __vectorcall GetDistance3D(TESObjectREFR* ref1, TESObjectREFR* ref2) // From JIP
-//{
-//	__asm
-//	{
-//		movups	xmm0, [ecx + 0x30]
-//		movups	xmm1, [edx + 0x30]
-//		subps	xmm0, xmm1
-//		mulps	xmm0, xmm0
-//		movhlps	xmm1, xmm0
-//		addss	xmm1, xmm0
-//		psrlq	xmm0, 0x20
-//		addss	xmm1, xmm0
-//		sqrtss	xmm0, xmm1
-//		retn
-//	}
-//}
+__declspec(naked) float __vectorcall GetDistance3D(TESObjectREFR* ref1, TESObjectREFR* ref2) // From JIP
+{
+	__asm
+	{
+		movups	xmm0, [ecx + 0x30]
+		movups	xmm1, [edx + 0x30]
+		subps	xmm0, xmm1
+		mulps	xmm0, xmm0
+		movhlps	xmm1, xmm0
+		addss	xmm1, xmm0
+		psrlq	xmm0, 0x20
+		addss	xmm1, xmm0
+		sqrtss	xmm0, xmm1
+		retn
+	}
+}
 
 //__declspec(naked) float __vectorcall TESObjectREFR::GetDistance(TESObjectREFR* target)
 //{
@@ -225,6 +243,22 @@ const std::string& GetFalloutDirectorySUP(void)
 
 
 
+//HWND hDllHandle = NULL;
+//LRESULT CALLBACK X_CBTProc(int nCode, WPARAM wParam, LPARAM lParam)
+//{
+//	if (nCode == HCBT_CREATEWND)
+//		hDllHandle = (HWND)wParam;
+//	return CallNextHookEx(NULL, nCode, wParam, lParam);
+//}
+//
+//HWND CallXAndGetHWND()
+//{
+//	HHOOK hDllHook = SetWindowsHookEx(WH_CBT, X_CBTProc, NULL, GetCurrentThreadId());
+//	UnhookWindowsHookEx(hDllHook);
+//	return hDllHandle;
+//}
+
+//CallXAndGetHWND();
 
 
 
@@ -346,6 +380,7 @@ void MessageHandler(NVSEMessagingInterface::Message* msg)
 		g_kMenuRoot = g_interfaceManager->menuRoot;
 		g_Cursor = g_interfaceManager->cursor;
 		KillActor = GetCmdByOpcode(0x108B)->execute;
+		g_dataHandler = DataHandler::Get();
 		
 		//WriteRelJump(0xA23252, 0xA23296);
 
@@ -548,8 +583,12 @@ bool NVSEPlugin_Load(const NVSEInterface* nvse)
 	/*52*/RegisterScriptCommand(FakeMouseMovement);
 	/*53*/RegisterScriptCommand(GetGrenadeTimeHeld);
 	/*54*/RegisterScriptCommand(IsPlayerOverencumbered);
-	/*54*/RegisterScriptCommand(SetCaughtPCPickpocketting);
-	/*55*/RegisterScriptCommand(KillAll2);
+	/*55*/RegisterScriptCommand(SetCaughtPCPickpocketting);
+	/*56*/RegisterScriptCommand(KillAll2);
+	/*57*/RegisterScriptCommand(LunetteCMD);
+	/*58*/RegisterScriptCommand(FindClosestActorFromRef);
+	/*59*/RegisterScriptCommand(FindClosestActor);
+	/*60*/RegisterScriptCommand(FindRandomActorFromRef);
 	//*20*/REG_CMD_ARR(SupTestArray, Array);
 
 	///*43*/RegisterScriptCommand(SUPPlayMP3File);

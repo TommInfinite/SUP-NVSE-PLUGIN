@@ -17,6 +17,12 @@ static ParamInfo kParams_Tomm_OneInt_OneFloat[2] =
 	{ "float", kParamType_Float, 0 },
 };
 
+static ParamInfo kParams_Tomm_OneIntOptional_OneFloatOptional[2] =
+{
+	{	"int", kParamType_Integer, 1 },
+	{ "float", kParamType_Float, 1 },
+};
+
 
 static ParamInfo kParams_Tomm_TwoInt[2] =
 {
@@ -344,4 +350,13 @@ ParamInfo kParams_Tomm_ObjectRef[1] =
 static ParamInfo kParams_Tomm_OneActorRef[1] = // from jip
 {
 	{	"actor reference",	kParamType_Actor,	0	},
+};
+
+static ParamInfo kParams_Tomm_FindClosestActor[5] =
+{
+		{ "float", kParamType_Float, 0 },
+		{ "float", kParamType_Float, 0 },
+		{ "float", kParamType_Float, 0 },
+		{ "int", kParamType_Integer, 1 },
+		{ "float", kParamType_Float, 1 },
 };

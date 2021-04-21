@@ -34,9 +34,11 @@ DEFINE_COMMAND_PLUGIN(IsPlayerOverencumbered, "", 0, 0, NULL)
 DEFINE_COMMAND_PLUGIN(SetCaughtPCPickpocketting, "", 1, 1, kParams_Tomm_OneIntOptional)
 DEFINE_COMMAND_PLUGIN(SupTestArray, "", 0, 0, NULL)
 DEFINE_COMMAND_PLUGIN(KillAll2, "", 0, 0, NULL)
-
-
-
+DEFINE_COMMAND_PLUGIN(LunetteCMD, "", 0, 1, kParams_Tomm_OneInt)
+DEFINE_COMMAND_PLUGIN(FindClosestActorFromRef, "", 1, 2, kParams_Tomm_OneIntOptional_OneFloatOptional)
+DEFINE_COMMAND_PLUGIN(FindClosestActor, "", 0, 5, kParams_Tomm_FindClosestActor)
+DEFINE_COMMAND_PLUGIN(FindRandomActorFromRef, "", 1, 2, kParams_Tomm_OneIntOptional_OneFloatOptional)
+DEFINE_COMMAND_PLUGIN(FindRandomActor, "", 1, 2, kParams_Tomm_FindClosestActor)
 
 
 
@@ -757,13 +759,18 @@ bool Cmd_FakeMouseMovement_Execute(COMMAND_ARGS)
 	}
 }
 
+//const char* DataHandler::GetNthModName(UInt32 modIndex)
+//{
+//	const ModInfo** activeModList = GetActiveModList();
+//	if (modIndex < GetActiveModCount() && activeModList[modIndex])
+//		return activeModList[modIndex]->name;
+//	else
+//		return "";
+//}
 
-bool Cmd_SUPTest_Execute(COMMAND_ARGS)
-{
 
-	//g_ThePlayer->ToggleFirstPerson(1);
-	return true;
-}
+
+
 
 bool Cmd_KillAll2_Execute(COMMAND_ARGS)
 {
@@ -869,6 +876,38 @@ bool Cmd_GetMousePosition_Execute(COMMAND_ARGS)
 	return true;
 }
 
+
+bool Cmd_LunetteCMD_Execute(COMMAND_ARGS)
+{
+	UInt8 modIdx = scriptObj->GetOverridingModIdx();
+	if (modIdx == 0xFF) return true;
+	if (strcmp("Lunette.esm", g_dataHandler->GetNthModName(modIdx))) return true;
+
+	int iRequest;
+
+	if (ExtractArgsEx(EXTRACT_ARGS_EX, &iRequest))
+	{
+		if (iRequest == 1)
+		{
+			g_ThePlayer->ToggleFirstPerson(1);
+		}
+		else if(iRequest == 2)
+		{
+			g_ThePlayer->ToggleFirstPerson(0);
+		}
+	}
+
+
+	return true;
+}
+
+
+
+
+
+
+
+
 //int xPos = GET_X_LPARAM(lParam);
 //int yPos = GET_Y_LPARAM(lParam);
 
@@ -972,6 +1011,244 @@ bool Cmd_GetGrenadeTimeHeld_Execute(COMMAND_ARGS)
 	*result = g_ThePlayer->timeGrenadeHeld;
 	return true;
 }
+
+
+
+
+
+bool Cmd_SUPTest_Execute(COMMAND_ARGS)
+{
+
+	
+
+	return true;
+}
+
+bool Cmd_FindClosestActorFromRef_Execute(COMMAND_ARGS)
+{
+	int iIncludeDead = 0;
+	MobileObject** objArray = g_processManager->objects.data, ** arrEnd = objArray;
+	objArray += g_processManager->beginOffsets[0];
+	arrEnd += g_processManager->endOffsets[0];
+	Actor* actor = NULL;
+	Actor* ChosenActor = NULL;
+	float fDistance = 0, fDistanceMax = -1;
+	float fDistanceMinimum = 9999999999999999999;
+
+	if (!ExtractArgsEx(EXTRACT_ARGS_EX, &iIncludeDead, &fDistanceMax)) return true;
+
+	if (fDistanceMax <= 0)fDistanceMax = 9999999999999999999;
+
+	for (; objArray != arrEnd; objArray++)
+	{
+		actor = (Actor*)*objArray;
+		if (actor && IS_ACTOR(actor) && actor != thisObj)
+		{
+			Console_Print("Current actor >>>%08x", actor->refID);
+
+			if (actor->GetDead())
+			{
+				if (iIncludeDead)
+				{}else {continue; }
+			}
+
+			fDistance = GetDistance3D(thisObj, actor);
+
+			if (fDistanceMinimum > fDistance)
+			{
+				if (fDistance < fDistanceMax)
+				{
+					fDistanceMinimum = fDistance;
+					ChosenActor = actor;
+					Console_Print("Chosen actor FOUND in ARRAY");
+				}
+
+			}
+		}
+	}
+
+	if (ChosenActor && IS_ACTOR(ChosenActor))
+	{
+		Console_Print("Chosen actor FOUND>>>%08x", ChosenActor->refID);
+		REFR_RES = ChosenActor->refID;
+	}
+
+	return true;
+}
+
+
+
+bool Cmd_FindClosestActor_Execute(COMMAND_ARGS)
+{
+	int iIncludeDead = 0;
+	MobileObject** objArray = g_processManager->objects.data, ** arrEnd = objArray;
+	objArray += g_processManager->beginOffsets[0];
+	arrEnd += g_processManager->endOffsets[0];
+	Actor* actor = NULL;
+	Actor* ChosenActor = NULL;
+	float fDistance = 0, fDistanceMax = -1;
+	float x1, x2, y1, y2, z1, z2;
+	float fDistanceMinimum = 9999999999999999999;
+
+	if (!ExtractArgsEx(EXTRACT_ARGS_EX, &x1, &y1, &z1, &iIncludeDead, &fDistanceMax)) return true;
+	if (fDistanceMax <= 0)fDistanceMax = 9999999999999999999;
+	for (; objArray != arrEnd; objArray++)
+	{
+		actor = (Actor*)*objArray;
+		if (actor && IS_ACTOR(actor) && actor != thisObj)
+		{
+			Console_Print("Current actor >>>%08x", actor->refID);
+			if (actor->GetDead())
+			{
+				if (iIncludeDead)
+				{}else { continue; }
+			}
+			x2 = actor->posX;
+			y2 = actor->posY;
+			z2 = actor->posZ;
+			fDistance = sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2) + pow(z2 - z1, 2) * 1.0);
+			if (fDistanceMinimum > fDistance)
+			{
+				if (fDistance < fDistanceMax)
+				{
+					fDistanceMinimum = fDistance;
+					ChosenActor = actor;
+					Console_Print("Chosen actor FOUND in ARRAY");
+				}
+			}
+		}
+	}
+
+	if (ChosenActor && IS_ACTOR(ChosenActor))
+	{
+		Console_Print("Chosen actor FOUND>>>%08x", ChosenActor->refID);
+		REFR_RES = ChosenActor->refID;
+	}
+
+	return true;
+}
+
+
+bool Cmd_FindRandomActorFromRef_Execute(COMMAND_ARGS)
+{
+	int iIncludeDead = 0;
+	MobileObject** objArray = g_processManager->objects.data, ** arrEnd = objArray;
+	objArray += g_processManager->beginOffsets[0];
+	arrEnd += g_processManager->endOffsets[0];
+	Actor* actor = NULL;
+	float fDistance = 0, fDistanceMax = -1;
+
+
+	if (!ExtractArgsEx(EXTRACT_ARGS_EX, &iIncludeDead, &fDistanceMax)) return true;
+
+	NVSEArrayVar* ActorArr = ArrIfc->CreateArray(NULL, 0, scriptObj);
+
+	if (fDistanceMax <= 0)fDistanceMax = 9999999999999999999;
+
+	for (; objArray != arrEnd; objArray++)
+	{
+		actor = (Actor*)*objArray;
+		if (actor && IS_ACTOR(actor) && actor != thisObj)
+		{
+			Console_Print("Current actor >>>%08x", actor->refID);
+
+			if (actor->GetDead())
+			{
+				if (iIncludeDead)
+				{}
+				else { continue; }
+			}
+
+			fDistance = GetDistance3D(thisObj, actor);
+
+			if (fDistance < fDistanceMax)
+			{
+				ArrIfc->AppendElement(ActorArr, NVSEArrayElement(actor));
+				Console_Print("Chosen actor FOUND in ARRAY");
+			}
+
+
+		}
+	}
+
+
+	int iSize = ArrIfc->GetArraySize(ActorArr);
+	Console_Print("Array size is %d", iSize);
+
+	if (iSize > 0)
+	{
+		//iSize -= 1;
+		iSize = GetRandomIntInRange(0, iSize);
+		Console_Print("Random number is--> %d", iSize);
+
+		NVSEArrayElement actorRes;
+
+		ArrIfc->GetElement(ActorArr, iSize, actorRes);
+		Console_Print("Chosen actor FOUND>>>%08x", actorRes.form->refID);
+		REFR_RES = actorRes.form->refID;
+	}
+
+	return true;
+}
+
+
+bool Cmd_FindRandomActor_Execute(COMMAND_ARGS)
+{
+	int iIncludeDead = 0;
+	MobileObject** objArray = g_processManager->objects.data, ** arrEnd = objArray;
+	objArray += g_processManager->beginOffsets[0];
+	arrEnd += g_processManager->endOffsets[0];
+	Actor* actor = NULL;
+	float fDistance = 0, fDistanceMax = -1;
+	float x1, x2, y1, y2, z1, z2;
+
+
+	if (!ExtractArgsEx(EXTRACT_ARGS_EX, &x1, &y1, &z1, &iIncludeDead, &fDistanceMax)) return true;
+	NVSEArrayVar* ActorArr = ArrIfc->CreateArray(NULL, 0, scriptObj);
+	if (fDistanceMax <= 0)fDistanceMax = 9999999999999999999;
+	for (; objArray != arrEnd; objArray++)
+	{
+		actor = (Actor*)*objArray;
+		if (actor && IS_ACTOR(actor) && actor != thisObj)
+		{
+			Console_Print("Current actor >>>%08x", actor->refID);
+			if (actor->GetDead())
+			{
+				if (iIncludeDead)
+				{}else { continue; }
+			}
+			x2 = actor->posX;
+			y2 = actor->posY;
+			z2 = actor->posZ;
+			fDistance = sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2) + pow(z2 - z1, 2) * 1.0);
+
+			if (fDistance < fDistanceMax)
+			{
+				ArrIfc->AppendElement(ActorArr, NVSEArrayElement(actor));
+				Console_Print("Chosen actor FOUND in ARRAY");
+			}
+			
+		}
+	}
+
+	int iSize = ArrIfc->GetArraySize(ActorArr);
+	Console_Print("Array size is %d", iSize);
+
+	if (iSize > 0)
+	{
+		//iSize -= 1;
+		iSize = GetRandomIntInRange(0, iSize);
+		Console_Print("Random number is--> %d", iSize);
+
+		NVSEArrayElement actorRes;
+
+		ArrIfc->GetElement(ActorArr, iSize, actorRes);
+		Console_Print("Chosen actor FOUND>>>%08x", actorRes.form->refID);
+		REFR_RES = actorRes.form->refID;
+	}
+	return true;
+}
+
 
 
 
