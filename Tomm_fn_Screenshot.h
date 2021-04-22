@@ -212,8 +212,9 @@ void gdiscreenAlt(char* s_strFolderName, char* s_strArgTemp, float fPosXStart, f
 		}
 
 		// Create a bitmap from the stream and save it to make sure the stream has the image
-//		Gdiplus::Bitmap bmp(istream, NULL);
-//		bmp.Save(L"t1est.jpeg", &clsid, NULL);             
+		//Gdiplus::Bitmap bmp(istream, NULL); ///////
+		//bmp.Save(filename, &clsid, NULL); ////////
+
 		delete& clsid;
 		DeleteObject(memdc);
 		DeleteObject(membit);

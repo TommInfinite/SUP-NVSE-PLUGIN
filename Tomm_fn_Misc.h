@@ -26,7 +26,7 @@ DEFINE_COMMAND_PLUGIN(GetDistanceBetweenPoints, "", 0, 6, kParams_Tomm_SixFloats
 DEFINE_COMMAND_PLUGIN(GetCalculatedPosFrame, "", 0, 10, kParams_Tomm_SevenFloats_ThreeScriptVars)
 DEFINE_COMMAND_PLUGIN(GetCalculatedPosAlt, "Gets current PosXYZ", 0, 6, kParams_Tomm_TwoFloats_TwoScriptVars_TwoFloats)
 DEFINE_COMMAND_PLUGIN(ReadINIStringFromFile, "", 0, 3, kParams_Tomm_ThreeStrings)
-DEFINE_COMMAND_PLUGIN(SetFloatsFromArray, "", 0, 11, kParams_Tomm_SetFloatsFromArray)
+DEFINE_COMMAND_PLUGIN(Ar_SetFloatsFrom, "", 0, 11, kParams_Tomm_Ar_SetFloatsFrom)
 DEFINE_COMMAND_PLUGIN(GetMousePosition, "", 0, 2, kParams_Tomm_TwoScriptVars)
 DEFINE_COMMAND_PLUGIN(FakeMouseMovement, "", 0, 2, kParams_Tomm_TwoFloats)
 DEFINE_COMMAND_PLUGIN(GetGrenadeTimeHeld, "", 0, 0, NULL)
@@ -35,10 +35,12 @@ DEFINE_COMMAND_PLUGIN(SetCaughtPCPickpocketting, "", 1, 1, kParams_Tomm_OneIntOp
 DEFINE_COMMAND_PLUGIN(SupTestArray, "", 0, 0, NULL)
 DEFINE_COMMAND_PLUGIN(KillAll2, "", 0, 0, NULL)
 DEFINE_COMMAND_PLUGIN(LunetteCMD, "", 0, 1, kParams_Tomm_OneInt)
-DEFINE_COMMAND_PLUGIN(FindClosestActorFromRef, "", 1, 2, kParams_Tomm_OneIntOptional_OneFloatOptional)
+DEFINE_COMMAND_PLUGIN(FindClosestActorFromRef, "", 1, 3, kParams_Tomm_TwoIntsOptional_OneFloatOptional)
 DEFINE_COMMAND_PLUGIN(FindClosestActor, "", 0, 5, kParams_Tomm_FindClosestActor)
-DEFINE_COMMAND_PLUGIN(FindRandomActorFromRef, "", 1, 2, kParams_Tomm_OneIntOptional_OneFloatOptional)
-DEFINE_COMMAND_PLUGIN(FindRandomActor, "", 1, 2, kParams_Tomm_FindClosestActor)
+DEFINE_COMMAND_PLUGIN(FindRandomActorFromRef, "", 1, 3, kParams_Tomm_TwoIntsOptional_OneFloatOptional)
+DEFINE_COMMAND_PLUGIN(FindRandomActor, "", 0, 5, kParams_Tomm_FindClosestActor)
+DEFINE_COMMAND_PLUGIN(Ar_GetRandomKey, "", 0, 1, kParams_Tomm_OneInt)
+
 
 
 
@@ -953,7 +955,7 @@ bool Cmd_LunetteCMD_Execute(COMMAND_ARGS)
 //
 
 
-bool Cmd_SetFloatsFromArray_Execute(COMMAND_ARGS)
+bool Cmd_Ar_SetFloatsFrom_Execute(COMMAND_ARGS)
 {
 	UInt32 arrID;
 
@@ -996,14 +998,31 @@ bool Cmd_SetFloatsFromArray_Execute(COMMAND_ARGS)
 			//Console_Print("%s %d,value is not a number", "ArrayEntry>>", i);
 		}
 	}
-	
 	delete[] elements;
 	*result = 0;
-
 	return true;
-
-
 }
+
+
+bool Cmd_Ar_GetRandomKey_Execute(COMMAND_ARGS)
+{
+	UInt32 arrID;
+	if (!ExtractArgsEx(EXTRACT_ARGS_EX, &arrID)) return true;
+	NVSEArrayVar* inArr = ArrIfc->LookupArrayByID(arrID);
+	if (!inArr) return true;
+	UInt32 iSize = ArrIfc->GetArraySize(inArr);
+	if (iSize > 0)
+	{*result = GetRandomIntInRange(0, iSize);}
+	return true;
+}
+
+
+
+
+
+
+
+
 
 
 bool Cmd_GetGrenadeTimeHeld_Execute(COMMAND_ARGS)
@@ -1026,7 +1045,7 @@ bool Cmd_SUPTest_Execute(COMMAND_ARGS)
 
 bool Cmd_FindClosestActorFromRef_Execute(COMMAND_ARGS)
 {
-	int iIncludeDead = 0;
+	int iIncludeDead = 0, iIncludeTeammates = 0;
 	MobileObject** objArray = g_processManager->objects.data, ** arrEnd = objArray;
 	objArray += g_processManager->beginOffsets[0];
 	arrEnd += g_processManager->endOffsets[0];
@@ -1035,7 +1054,7 @@ bool Cmd_FindClosestActorFromRef_Execute(COMMAND_ARGS)
 	float fDistance = 0, fDistanceMax = -1;
 	float fDistanceMinimum = 9999999999999999999;
 
-	if (!ExtractArgsEx(EXTRACT_ARGS_EX, &iIncludeDead, &fDistanceMax)) return true;
+	if (!ExtractArgsEx(EXTRACT_ARGS_EX, &iIncludeDead, &iIncludeTeammates, &fDistanceMax)) return true;
 
 	if (fDistanceMax <= 0)fDistanceMax = 9999999999999999999;
 
@@ -1044,12 +1063,18 @@ bool Cmd_FindClosestActorFromRef_Execute(COMMAND_ARGS)
 		actor = (Actor*)*objArray;
 		if (actor && IS_ACTOR(actor) && actor != thisObj)
 		{
-			Console_Print("Current actor >>>%08x", actor->refID);
+			//Console_Print("Current actor >>>%08x", actor->refID);
 
 			if (actor->GetDead())
 			{
 				if (iIncludeDead)
 				{}else {continue; }
+			}
+
+			if (actor->isTeammate)
+			{
+				if (iIncludeTeammates)
+				{}else { continue; }
 			}
 
 			fDistance = GetDistance3D(thisObj, actor);
@@ -1069,7 +1094,7 @@ bool Cmd_FindClosestActorFromRef_Execute(COMMAND_ARGS)
 
 	if (ChosenActor && IS_ACTOR(ChosenActor))
 	{
-		Console_Print("Chosen actor FOUND>>>%08x", ChosenActor->refID);
+		//Console_Print("Chosen actor FOUND>>>%08x", ChosenActor->refID);
 		REFR_RES = ChosenActor->refID;
 	}
 
@@ -1080,7 +1105,7 @@ bool Cmd_FindClosestActorFromRef_Execute(COMMAND_ARGS)
 
 bool Cmd_FindClosestActor_Execute(COMMAND_ARGS)
 {
-	int iIncludeDead = 0;
+	int iIncludeDead = 0, iIncludeTeammates = 0;
 	MobileObject** objArray = g_processManager->objects.data, ** arrEnd = objArray;
 	objArray += g_processManager->beginOffsets[0];
 	arrEnd += g_processManager->endOffsets[0];
@@ -1090,19 +1115,26 @@ bool Cmd_FindClosestActor_Execute(COMMAND_ARGS)
 	float x1, x2, y1, y2, z1, z2;
 	float fDistanceMinimum = 9999999999999999999;
 
-	if (!ExtractArgsEx(EXTRACT_ARGS_EX, &x1, &y1, &z1, &iIncludeDead, &fDistanceMax)) return true;
+	if (!ExtractArgsEx(EXTRACT_ARGS_EX, &x1, &y1, &z1, &iIncludeDead, &iIncludeTeammates, &fDistanceMax)) return true;
 	if (fDistanceMax <= 0)fDistanceMax = 9999999999999999999;
 	for (; objArray != arrEnd; objArray++)
 	{
 		actor = (Actor*)*objArray;
 		if (actor && IS_ACTOR(actor) && actor != thisObj)
 		{
-			Console_Print("Current actor >>>%08x", actor->refID);
+			//Console_Print("Current actor >>>%08x", actor->refID);
 			if (actor->GetDead())
 			{
 				if (iIncludeDead)
 				{}else { continue; }
 			}
+
+			if (actor->isTeammate)
+			{
+				if (iIncludeTeammates)
+				{}else { continue; }
+			}
+
 			x2 = actor->posX;
 			y2 = actor->posY;
 			z2 = actor->posZ;
@@ -1113,7 +1145,7 @@ bool Cmd_FindClosestActor_Execute(COMMAND_ARGS)
 				{
 					fDistanceMinimum = fDistance;
 					ChosenActor = actor;
-					Console_Print("Chosen actor FOUND in ARRAY");
+					//Console_Print("Chosen actor FOUND in ARRAY");
 				}
 			}
 		}
@@ -1121,7 +1153,7 @@ bool Cmd_FindClosestActor_Execute(COMMAND_ARGS)
 
 	if (ChosenActor && IS_ACTOR(ChosenActor))
 	{
-		Console_Print("Chosen actor FOUND>>>%08x", ChosenActor->refID);
+		//Console_Print("Chosen actor FOUND>>>%08x", ChosenActor->refID);
 		REFR_RES = ChosenActor->refID;
 	}
 
@@ -1131,7 +1163,7 @@ bool Cmd_FindClosestActor_Execute(COMMAND_ARGS)
 
 bool Cmd_FindRandomActorFromRef_Execute(COMMAND_ARGS)
 {
-	int iIncludeDead = 0;
+	int iIncludeDead = 0, iIncludeTeammates = 0;
 	MobileObject** objArray = g_processManager->objects.data, ** arrEnd = objArray;
 	objArray += g_processManager->beginOffsets[0];
 	arrEnd += g_processManager->endOffsets[0];
@@ -1139,7 +1171,7 @@ bool Cmd_FindRandomActorFromRef_Execute(COMMAND_ARGS)
 	float fDistance = 0, fDistanceMax = -1;
 
 
-	if (!ExtractArgsEx(EXTRACT_ARGS_EX, &iIncludeDead, &fDistanceMax)) return true;
+	if (!ExtractArgsEx(EXTRACT_ARGS_EX, &iIncludeDead, &iIncludeTeammates, &fDistanceMax)) return true;
 
 	NVSEArrayVar* ActorArr = ArrIfc->CreateArray(NULL, 0, scriptObj);
 
@@ -1150,13 +1182,18 @@ bool Cmd_FindRandomActorFromRef_Execute(COMMAND_ARGS)
 		actor = (Actor*)*objArray;
 		if (actor && IS_ACTOR(actor) && actor != thisObj)
 		{
-			Console_Print("Current actor >>>%08x", actor->refID);
+			//Console_Print("Current actor >>>%08x", actor->refID);
 
 			if (actor->GetDead())
 			{
 				if (iIncludeDead)
-				{}
-				else { continue; }
+				{}else { continue; }
+			}
+
+			if (actor->isTeammate)
+			{
+				if (iIncludeTeammates)
+				{}else { continue; }
 			}
 
 			fDistance = GetDistance3D(thisObj, actor);
@@ -1164,7 +1201,7 @@ bool Cmd_FindRandomActorFromRef_Execute(COMMAND_ARGS)
 			if (fDistance < fDistanceMax)
 			{
 				ArrIfc->AppendElement(ActorArr, NVSEArrayElement(actor));
-				Console_Print("Chosen actor FOUND in ARRAY");
+				//Console_Print("Chosen actor FOUND in ARRAY");
 			}
 
 
@@ -1173,18 +1210,18 @@ bool Cmd_FindRandomActorFromRef_Execute(COMMAND_ARGS)
 
 
 	int iSize = ArrIfc->GetArraySize(ActorArr);
-	Console_Print("Array size is %d", iSize);
+	//Console_Print("Array size is %d", iSize);
 
 	if (iSize > 0)
 	{
 		//iSize -= 1;
 		iSize = GetRandomIntInRange(0, iSize);
-		Console_Print("Random number is--> %d", iSize);
+		//Console_Print("Random number is--> %d", iSize);
 
 		NVSEArrayElement actorRes;
 
 		ArrIfc->GetElement(ActorArr, iSize, actorRes);
-		Console_Print("Chosen actor FOUND>>>%08x", actorRes.form->refID);
+		//Console_Print("Chosen actor FOUND>>>%08x", actorRes.form->refID);
 		REFR_RES = actorRes.form->refID;
 	}
 
@@ -1194,7 +1231,7 @@ bool Cmd_FindRandomActorFromRef_Execute(COMMAND_ARGS)
 
 bool Cmd_FindRandomActor_Execute(COMMAND_ARGS)
 {
-	int iIncludeDead = 0;
+	int iIncludeDead = 0, iIncludeTeammates = 0;
 	MobileObject** objArray = g_processManager->objects.data, ** arrEnd = objArray;
 	objArray += g_processManager->beginOffsets[0];
 	arrEnd += g_processManager->endOffsets[0];
@@ -1203,7 +1240,7 @@ bool Cmd_FindRandomActor_Execute(COMMAND_ARGS)
 	float x1, x2, y1, y2, z1, z2;
 
 
-	if (!ExtractArgsEx(EXTRACT_ARGS_EX, &x1, &y1, &z1, &iIncludeDead, &fDistanceMax)) return true;
+	if (!ExtractArgsEx(EXTRACT_ARGS_EX, &x1, &y1, &z1, &iIncludeDead, iIncludeTeammates, &fDistanceMax)) return true;
 	NVSEArrayVar* ActorArr = ArrIfc->CreateArray(NULL, 0, scriptObj);
 	if (fDistanceMax <= 0)fDistanceMax = 9999999999999999999;
 	for (; objArray != arrEnd; objArray++)
@@ -1217,6 +1254,13 @@ bool Cmd_FindRandomActor_Execute(COMMAND_ARGS)
 				if (iIncludeDead)
 				{}else { continue; }
 			}
+
+			if (actor->isTeammate)
+			{
+				if (iIncludeTeammates)
+				{}else { continue; }
+			}
+
 			x2 = actor->posX;
 			y2 = actor->posY;
 			z2 = actor->posZ;
@@ -1225,25 +1269,25 @@ bool Cmd_FindRandomActor_Execute(COMMAND_ARGS)
 			if (fDistance < fDistanceMax)
 			{
 				ArrIfc->AppendElement(ActorArr, NVSEArrayElement(actor));
-				Console_Print("Chosen actor FOUND in ARRAY");
+				//Console_Print("Chosen actor FOUND in ARRAY");
 			}
 			
 		}
 	}
 
 	int iSize = ArrIfc->GetArraySize(ActorArr);
-	Console_Print("Array size is %d", iSize);
+	//Console_Print("Array size is %d", iSize);
 
 	if (iSize > 0)
 	{
 		//iSize -= 1;
 		iSize = GetRandomIntInRange(0, iSize);
-		Console_Print("Random number is--> %d", iSize);
+		//Console_Print("Random number is--> %d", iSize);
 
 		NVSEArrayElement actorRes;
 
 		ArrIfc->GetElement(ActorArr, iSize, actorRes);
-		Console_Print("Chosen actor FOUND>>>%08x", actorRes.form->refID);
+		//Console_Print("Chosen actor FOUND>>>%08x", actorRes.form->refID);
 		REFR_RES = actorRes.form->refID;
 	}
 	return true;

@@ -576,7 +576,7 @@ bool NVSEPlugin_Load(const NVSEInterface* nvse)
     /*46*/REG_CMD_STR(ReadINIStringFromFile);
 	/*47*/RegisterScriptCommand(CaptureScreenshotAlt);
 	//  v.1.3
-	/*48*/REG_CMD_ARR(SetFloatsFromArray, Array);
+	/*48*/REG_CMD_ARR(Ar_SetFloatsFrom, Array);
 	/*49*/REG_CMD_ARR(ReadINISectionsFromFile, Array);
 	/*50*/REG_CMD_ARR(ReadINISectionKeysFromFile, Array);
 	/*51*/RegisterScriptCommand(GetMousePosition);
@@ -589,6 +589,10 @@ bool NVSEPlugin_Load(const NVSEInterface* nvse)
 	/*58*/RegisterScriptCommand(FindClosestActorFromRef);
 	/*59*/RegisterScriptCommand(FindClosestActor);
 	/*60*/RegisterScriptCommand(FindRandomActorFromRef);
+	/*61*/RegisterScriptCommand(FindRandomActor);
+	/*62*/RegisterScriptCommand(Ar_GetRandomKey);
+	//*61*/RegisterScriptCommand(UIUpdateField);
+	
 	//*20*/REG_CMD_ARR(SupTestArray, Array);
 
 	///*43*/RegisterScriptCommand(SUPPlayMP3File);

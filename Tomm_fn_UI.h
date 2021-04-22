@@ -10,6 +10,9 @@ DEFINE_COMMAND_PLUGIN(GetCursorTrait, "Gets cursor traits", 0, 1, kParams_Tomm_O
 DEFINE_COMMAND_PLUGIN(SetCursorTrait, "Sets cursor traits", 0, 2, kParams_Tomm_OneInt_OneFloat)
 DEFINE_COMMAND_PLUGIN(SetCursorTraitGradual, "Sets cursor trait gradually", 0, 5, kParams_Tomm_OneInt_ThreeOptFloats_OneOptInt)
 DEFINE_COMMAND_PLUGIN(DumpTileInfoToArray, "Dumps XML element info to array", 0, 1, kParams_Tomm_OneStringOptional)
+
+
+
 //DEFINE_COMMAND_PLUGIN(GetUITraitValueType, "Gets value type of component", 0, 1, kParams_Tomm_OneStringOptional)
 
 
@@ -332,6 +335,7 @@ bool Cmd_GetCursorTrait_Execute(COMMAND_ARGS) ////////////Concept taken from JiP
 
 bool Cmd_SetCursorTrait_Execute(COMMAND_ARGS) ////////////Concept taken from JiP
 {
+
 	UInt32 iTrait;
 	float fValue;
 	Tile::Value* val = 0;
@@ -431,6 +435,40 @@ bool Cmd_SetCursorTraitGradual_Execute(COMMAND_ARGS) ////////////SetUIFloatGradu
 }
 
 
+
+
+//bool Cmd_UIUpdateField_Execute(COMMAND_ARGS) // used as debugging function so don't care about performance.
+//{
+//
+//
+//	alignas(16) char s_strArgTemp2[0x4000];
+//
+//	if (ExtractArgsEx(EXTRACT_ARGS_EX, &s_strArgTemp2))
+//	{
+//
+//		Tile* component = GetTargetComponent(s_strArgTemp2);
+//
+//		if (component)
+//		{
+//			Console_Print("<<Updating field>>");
+//			component->UpdateField(kTileValue_filename, 0, "fdsfsdfsd");
+//			//UIUpdateField "HUDMainMenu\TestImage\filename"
+//			//UIUpdateField "HUDMainMenu\TestImage"
+//
+//
+//		}
+//
+//	}
+//
+//
+//	return true;
+//}
+
+
+
+
+
+//DEFINE_COMMAND_PLUGIN(UIUpdateField, "Dumps XML element info", 0, 1, kParams_Tomm_OneStringOptional)
 
 //bool Cmd_GetUITraitValueType_Execute(COMMAND_ARGS) // used as debugging function so don't care about performance.
 //{

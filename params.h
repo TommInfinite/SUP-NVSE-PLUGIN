@@ -17,8 +17,9 @@ static ParamInfo kParams_Tomm_OneInt_OneFloat[2] =
 	{ "float", kParamType_Float, 0 },
 };
 
-static ParamInfo kParams_Tomm_OneIntOptional_OneFloatOptional[2] =
+static ParamInfo kParams_Tomm_TwoIntsOptional_OneFloatOptional[3] =
 {
+	{	"int", kParamType_Integer, 1 },
 	{	"int", kParamType_Integer, 1 },
 	{ "float", kParamType_Float, 1 },
 };
@@ -310,7 +311,7 @@ ParamInfo kParams_Tomm_CaptureScreenshotAlt[9] =
 	{"Float", kParamType_Float, 0},
 	{"Integer", kParamType_Integer, 0},
 	{"Integer", kParamType_Integer, 0},
-	{"Integer", kParamType_Integer, 0},
+	{"Integer", kParamType_Integer, 1},
 };
 
 ParamInfo kParams_Tomm_DeleteScreenshot[2] =
@@ -326,7 +327,7 @@ ParamInfo kParams_Tomm_CaptureScreenshot[7] =
 	{"Integer", kParamType_Integer, 1},
 };
 
-ParamInfo kParams_Tomm_SetFloatsFromArray[11] =
+ParamInfo kParams_Tomm_Ar_SetFloatsFrom[11] =
 {
 	{ "Integer", kParamType_Integer, 0 },
 	{"Variable", kParamType_ScriptVariable, 0},
