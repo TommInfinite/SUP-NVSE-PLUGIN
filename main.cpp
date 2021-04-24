@@ -68,11 +68,13 @@ DataHandler* g_dataHandler = nullptr; // from JG
 //VATSCameraData* g_VATSCameraData = (VATSCameraData*)0x11F2250; // From JIP
 VATSMenu** g_VATSMenu = (VATSMenu**)0x11DB0D4;
 ProcessManager* g_processManager = (ProcessManager*)0x11E0E80; // From JiP
-UInt32 SUPNVSEVersion = 130;
+UInt32 SUPNVSEVersion = 140;
 #define NUM_ARGS *((UInt8*)scriptData + *opcodeOffsetPtr)
 #define REFR_RES *(UInt32*)result // From JIP
 #define IS_ACTOR(form) ((*(UInt32**)form)[0x40] == 0x8D0360) // From JIP
 #define GetRandomIntInRange(iMin, iMax) ThisCall<SInt32, SInt32>(0xAA5230, (void*)0x11C4180, iMax - iMin) + iMin // From JIP
+
+
 //bool b_MouseInput = true;
 
 //SETTINGS
@@ -173,7 +175,7 @@ __declspec(naked) float __vectorcall GetDistance3D(TESObjectREFR* ref1, TESObjec
 //}
 
 
-__declspec(naked) bool KillActorExecute(COMMAND_ARGS)
+__declspec(naked) bool KillActorExecute(COMMAND_ARGS) // From JIP
 {
 	__asm	jmp		KillActor
 }
@@ -332,7 +334,6 @@ void MessageHandler(NVSEMessagingInterface::Message* msg)
 
 		if ((*g_osGlobals)->tfcState == 1 && bTFCPosOnLoadFix == 1) // Jazz
 		{
-			//RunScript("TFC");
 			(*(OSGlobals**)0x11DEA0C)->tfcState = 0;
 
 		}
@@ -410,6 +411,8 @@ void MessageHandler(NVSEMessagingInterface::Message* msg)
 #include "Tomm_fn_TFC.h"
 #include "Tomm_fn_Screenshot.h"
 #include "Tomm_fn_INI.h"
+#include "Tomm_fn_Array.h"
+#include "Tomm_fn_Math.h"
 
 
 
@@ -575,7 +578,7 @@ bool NVSEPlugin_Load(const NVSEInterface* nvse)
 	/*45*/RegisterScriptCommand(ReadINIFloatFromFileAlt);
     /*46*/REG_CMD_STR(ReadINIStringFromFile);
 	/*47*/RegisterScriptCommand(CaptureScreenshotAlt);
-	//  v.1.3
+	//  v.1.40
 	/*48*/REG_CMD_ARR(Ar_SetFloatsFrom, Array);
 	/*49*/REG_CMD_ARR(ReadINISectionsFromFile, Array);
 	/*50*/REG_CMD_ARR(ReadINISectionKeysFromFile, Array);
@@ -591,10 +594,11 @@ bool NVSEPlugin_Load(const NVSEInterface* nvse)
 	/*60*/RegisterScriptCommand(FindRandomActorFromRef);
 	/*61*/RegisterScriptCommand(FindRandomActor);
 	/*62*/RegisterScriptCommand(Ar_GetRandomKey);
-	//*61*/RegisterScriptCommand(UIUpdateField);
-	
-	//*20*/REG_CMD_ARR(SupTestArray, Array);
+	/*63*/REG_CMD_STR(Ar_GetRandomKeyMap);
+	/*64*/RegisterScriptCommand(Ar_HasInvalidRefs);
 
+	//*61*/RegisterScriptCommand(UIUpdateField);
+	//*20*/REG_CMD_ARR(SupTestArray, Array);
 	///*43*/RegisterScriptCommand(SUPPlayMP3File);
 	//RegisterScriptCommand(ToggleMouseInput);
 	//RegisterScriptCommand(GetUITraitValueType);
@@ -614,112 +618,3 @@ bool NVSEPlugin_Load(const NVSEInterface* nvse)
 
 
 
-
-
-
-//{
-//	Tile* activeTile = g_interfaceManager->GetActiveTile();
-	//if (activeTile)
-	//{
-		//Tile::Value* val = activeTile->GetValue(kTileValue_x);
-		//if (val) return val->num;
-		//*result = val->num;
-		//return true;
-
-	//}
-	//return -1;
-//}
-//TESForm* menuRef = NULL;
-//*result = 0;
-//REFR_RES = g_thePlayer->refID;
-
-//return true;
-//*result = 0;
-//REFR_RES = g_thePlayer->refID;
-//return g_thePlayer->refID;
-//int age1 = 20;
-//age1 = 340;
-//auto hud = HUDMainMenu::GetSingleton();
-
-//for (auto tile : hud->tiles)
-//{
-	//tile->Dump();
-//}
-//g_thePlayer->ToggleFirstPerson(1); //to check if function works at all and it does.
-
-//WORKING - function to dump UI element by Active tile
-//Tile* component = g_interfaceManager->GetActiveTile();
-
-//if (component)
-//{
-//	component->Dump();
-//}
-
-//WORKINGEND
-
-
-
-	//WORKING2 - function to dump UI element by path
-//if (ExtractArgsEx(EXTRACT_ARGS_EX, &s_strArgBuffer))
-//{
-	//Tile* component = GetTargetComponent2(s_strArgBuffer);
-	//if (component)
-	//{
-	//	component->Dump();
-	//}
-
-//}
-//WORKING2 END
-
-		//WORKING3 - Real screen resolution
-//* result = g_screenWidth;
-//DoConsolePrint(result);
-//WORKING3 END
-
-
-//WORKING4 - Set VIS flags
-
-	//if (ExtractArgsEx(EXTRACT_ARGS_EX, &iVisFLags));
-	//{
-	//	g_HUDMainMenu->visibilityOverrides &= iVisFLags;
-
-	//}
-
-	////WORKING4 - Set VIS flags END
-
-	//(EXTRACT_ARGS, &iVisFLags);
-
-	//Console_Print("HUDVISIBILITYFLAGSACTIVE");
-
-
-//UnorderedSet<UInt32> s_gameLoadedInformedScripts;
-//
-//bool Cmd_GetGameLoadedFor_Execute(COMMAND_ARGS)
-//{
-//	//TESForm* scriptArg = NULL;
-//	//ExtractArgs(EXTRACT_ARGS, &scriptArg);
-//
-//	if (s_gameLoadedInformedScripts.HasKey(scriptObj->refID))
-//
-//	{
-//		Console_Print("HAS KEY.");
-//	
-//	}Console_Print("DONT HAVE KEY.");
-//
-//
-//
-//
-//	return true;
-
-
-	//ScriptVar* outX, * outY, * outZ;
-
-	//if (ExtractArgs(EXTRACT_ARGS_EX, &outX,&outX,&outX))
-	//{
-		//outX->data.num = thisObj->posX;
-		//outY->data.num = thisObj->posY;
-		//outZ->data.num = thisObj->posZ;
-	//	//setVarByName(scriptObj, eventList, outx, thisObj->posX);
-	//	//setVarByName(scriptObj, eventList, outy, thisObj->posY);
-	//	//setVarByName(scriptObj, eventList, outz, thisObj->posZ);
-	//}

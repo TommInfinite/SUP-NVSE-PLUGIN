@@ -3,7 +3,7 @@ DEFINE_COMMAND_PLUGIN(ReadINISectionsFromFile, "", 0, 1, kParams_Tomm_OneString)
 DEFINE_COMMAND_PLUGIN(ReadINISectionKeysFromFile, "", 0, 2, kParams_Tomm_TwoStrings)
 DEFINE_COMMAND_PLUGIN(ReadINIFloatFromFile, "", 0, 3, kParams_Tomm_ThreeStrings)
 DEFINE_COMMAND_PLUGIN(ReadINIFloatFromFileAlt, "", 0, 3, kParams_Tomm_ThreeStrings)
-
+DEFINE_COMMAND_PLUGIN(ReadINIStringFromFile, "", 0, 3, kParams_Tomm_ThreeStrings)
 
 
 bool Cmd_ReadINIFloatFromFile_Execute(COMMAND_ARGS)

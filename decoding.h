@@ -291,51 +291,6 @@ STATIC_ASSERT(sizeof(HUDMainMenu) == 0x278);
 
 
 
-//struct ActorHitData
-//{
-//	enum HitFlags
-//	{
-//		kFlag_TargetIsBlocking = 1,
-//		kFlag_TargetWeaponOut = 2,
-//		kFlag_IsCritical = 4,
-//		kFlag_OnDeathCritEffect = 8,
-//		kFlag_IsFatal = 0x10,
-//		kFlag_DismemberLimb = 0x20,
-//		kFlag_ExplodeLimb = 0x40,
-//		kFlag_CrippleLimb = 0x80,
-//		kFlag_BreakWeaponNonEmbedded = 0x100,
-//		kFlag_BreakWeaponEmbedded = 0x200,
-//		kFlag_IsSneakAttack = 0x400,
-//		kFlag_ArmorPenetrated = 0x80000000	// JIP only
-//	};
-//
-//	Actor* source;		// 00
-//	Actor* target;		// 04
-//	union								// 08
-//	{
-//		Projectile* projectile;
-//		Explosion* explosion;
-//	};
-//	UInt32				weaponAV;		// 0C
-//	SInt32				hitLocation;	// 10
-//	float				healthDmg;		// 14
-//	float				wpnBaseDmg;		// 18	Skill and weapon condition modifiers included
-//	float				fatigueDmg;		// 1C
-//	float				limbDmg;		// 20
-//	float				blockDTMod;		// 24
-//	float				armorDmg;		// 28
-//	float				flt2C;			// 2C
-//	TESObjectWEAP* weapon;		// 30
-//	float				healthPerc;		// 34
-//	NiVector3			impactPos;		// 38
-//	NiVector3			impactAngle;	// 44
-//	UInt32				unk50;			// 50
-//	void* ptr54;			// 54
-//	UInt32				flags;			// 58
-//	float				dmgMult;		// 5C
-//	SInt32				unk60;			// 60	Unused; rigged by CopyHitDataHook to store hitLocation
-//};
-
 template <typename Item> struct ListBoxItem //From JIP DECODING
 {
 	Tile* tile;

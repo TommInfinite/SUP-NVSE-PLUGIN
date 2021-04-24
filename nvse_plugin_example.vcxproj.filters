@@ -152,6 +152,12 @@
     <ClInclude Include="Tomm_fn_INI.h">
       <Filter>functions</Filter>
     </ClInclude>
+    <ClInclude Include="Tomm_fn_Array.h">
+      <Filter>functions</Filter>
+    </ClInclude>
+    <ClInclude Include="Tomm_fn_Math.h">
+      <Filter>functions</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="exports.def" />

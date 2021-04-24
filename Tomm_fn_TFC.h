@@ -13,6 +13,9 @@ DEFINE_COMMAND_PLUGIN(GetTFCAngle, "", 0, 1, kParams_Tomm_Axis)
 DEFINE_COMMAND_PLUGIN(SetTFCAngle, "", 0, 1, kParams_Tomm_OneAxis_OneFloat)
 DEFINE_COMMAND_PLUGIN(GetTFCRot, "", 0, 1, kParams_Tomm_Axis)
 DEFINE_COMMAND_PLUGIN(SetTFCRot, "", 0, 1, kParams_Tomm_OneAxis_OneFloat)
+DEFINE_COMMAND_PLUGIN(GetCalculatedAngleZForTFCCamera, "", 0, 2, kParams_Tomm_TwoFloats)
+DEFINE_COMMAND_PLUGIN(GetCalculatedAngleXForTFCCamera, "", 0, 3, kParams_Tomm_ThreeFloats)
+
 
 bool Cmd_SetTFCPosEx_Execute(COMMAND_ARGS)
 {
@@ -214,16 +217,44 @@ bool Cmd_SetTFCRot_Execute(COMMAND_ARGS)
 }
 
 
-//bool Cmd_GetActorTiltAngle_Execute(COMMAND_ARGS)
-//{
-//	*result = 0;
-//	char axis;
-//	if (ExtractArgsEx(EXTRACT_ARGS_EX, &axis) && (axis < 'Z'))
-//	{
-//		bhkCharacterController* charCtrl = thisObj->GetCharacterController();
-//		if (charCtrl)
-//			*result = ((axis == 'X') ? charCtrl->tiltAngleX : charCtrl->tiltAngleY) / kDblPId180;
-//	}
-//	return true;
-//}
-//
+bool Cmd_GetCalculatedAngleZForTFCCamera_Execute(COMMAND_ARGS) //https://stackoverflow.com/questions/48227928/calculating-heading-angle-from-2-points
+{
+
+	float CallX, CallY, TargetX, TargetY;
+
+
+	if (ExtractArgsEx(EXTRACT_ARGS_EX, &TargetX, &TargetY))
+	{
+		//dir = g_ThePlayer->flycamZRot / 0.017453292519943295;
+		CallX = g_ThePlayer->flycamPosX;
+		CallY = g_ThePlayer->flycamPosY;
+
+		double heading = std::atan2(TargetX - CallX, TargetY - CallY) * 180 / 3.1415926535897;
+		if (heading < -180) heading += 360;
+		if (heading > 180) heading -= 360;
+
+		*result = heading;
+	}
+
+	return true;
+}
+
+bool Cmd_GetCalculatedAngleXForTFCCamera_Execute(COMMAND_ARGS)//I HATE MATH SO MUCH
+{
+	float x1, x2, y1, y2, z1, z2;
+	float fSin, fPlayerAngle;
+	if (ExtractArgsEx(EXTRACT_ARGS_EX, &x2, &y2, &z2))
+	{
+		x1 = g_ThePlayer->flycamPosX;
+		y1 = g_ThePlayer->flycamPosY;
+		z1 = g_ThePlayer->flycamPosZ;
+		float fDistance = sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2) + pow(z2 - z1, 2) * 1.0);
+		fSin = asin((z1 - z2) / fDistance);
+
+		*result = fSin * 180 / 3.14159265;
+	}
+	return true;
+}
+
+
+
