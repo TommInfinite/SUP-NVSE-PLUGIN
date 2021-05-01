@@ -14,7 +14,7 @@ DEFINE_COMMAND_PLUGIN(GetPCTrait, "", 0, 1, kParams_Tomm_OneInt)
 DEFINE_COMMAND_PLUGIN(GetMousePosition, "", 0, 2, kParams_Tomm_TwoScriptVars)
 DEFINE_COMMAND_PLUGIN(FakeMouseMovement, "", 0, 2, kParams_Tomm_TwoFloats)
 DEFINE_COMMAND_PLUGIN(GetGrenadeTimeHeld, "", 0, 0, NULL)
-DEFINE_COMMAND_PLUGIN(IsPlayerOverencumbered, "", 0, 0, NULL)
+DEFINE_CMD_ALT_COND_PLUGIN(IsPlayerOverencumbered, , , 0, 0, NULL);	
 DEFINE_COMMAND_PLUGIN(SetCaughtPCPickpocketting, "", 1, 1, kParams_Tomm_OneIntOptional)
 DEFINE_COMMAND_PLUGIN(KillAll2, "", 0, 0, NULL)
 DEFINE_COMMAND_PLUGIN(LunetteCMD, "", 0, 1, kParams_Tomm_OneInt)
@@ -476,11 +476,15 @@ bool Cmd_SetCaughtPCPickpocketting_Execute(COMMAND_ARGS) // From JiP
 }
 
 
+bool Cmd_IsPlayerOverencumbered_Eval(COMMAND_ARGS_EVAL)
+{
+	*result = g_ThePlayer->Unk_D6(); // From JiP
+	return true;
+}
 
 bool Cmd_IsPlayerOverencumbered_Execute(COMMAND_ARGS)
 {
 	*result = g_ThePlayer->Unk_D6(); // From JiP
-
 	return true;
 }
 
