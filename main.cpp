@@ -35,6 +35,13 @@
 
 
 
+
+
+
+
+
+
+
 #ifndef RegisterScriptCommand
 #define RegisterScriptCommand(name) 	nvse->RegisterCommand(&kCommandInfo_ ##name);
 #endif
@@ -74,6 +81,9 @@ UInt32 SUPNVSEVersion = 140;
 #define IS_ACTOR(form) ((*(UInt32**)form)[0x40] == 0x8D0360) // From JIP
 #define GetRandomIntInRange(iMin, iMax) ThisCall<SInt32, SInt32>(0xAA5230, (void*)0x11C4180, iMax - iMin) + iMin // From JIP
 
+#define HudBarIterElement g_HUDBArsArray[iKey]
+
+
 
 //bool b_MouseInput = true;
 
@@ -96,6 +106,8 @@ UnorderedMap<const char*, UInt32> s_menuNameToID({ {"MessageMenu", kMenuType_Mes
 typedef NVSEArrayVarInterface::Array NVSEArrayVar;
 typedef NVSEArrayVarInterface::Element NVSEArrayElement;
 
+
+#include <Tomm_HUDBars.h>
 
 
 Tile* InterfaceManager::GetActiveTile() //proably from JiP
@@ -137,6 +149,23 @@ char SavedSGPathNVSE[0x4000] = "NULL";
 char FalloutFolderPath[0x4000] = "NULL";
 
 /// //////////////////////////
+
+//GLOBAL NVSE ARRAY VARS
+NVSEArrayVar* TileArrayStore;
+NVSEArrayVar* g_ar_temp;
+
+//STRING GLOBAL
+char g_FileInfoTempChar[0x4000] = "NULL";
+
+
+//XML
+const char kComponentTempXML[] = "sup_temp.xml";
+const char kComponentTempBarsXML[] = "sup_tempBars.xml";
+
+//XML TILE GLOBAL
+Tile* g_SUPRect;
+Tile* g_SUPRectBars;
+
 
 
 __declspec(naked) float __vectorcall GetDistance3D(TESObjectREFR* ref1, TESObjectREFR* ref2) // From JIP
@@ -276,6 +305,7 @@ NVSEScriptInterface* g_script;
 // With this, plugins can listen to messages such as whenever the game loads
 void MessageHandler(NVSEMessagingInterface::Message* msg)
 {
+
 	switch (msg->type)
 	{
 	case NVSEMessagingInterface::kMessage_LoadGame: 
@@ -392,9 +422,10 @@ void MessageHandler(NVSEMessagingInterface::Message* msg)
 		GetFalloutDirectorySUP();
 		break;
 
-	//case NVSEMessagingInterface::kMessage_MainGameLoop:
-		//_MESSAGE("MainLOOP");
-		//break;
+	case NVSEMessagingInterface::kMessage_MainGameLoop:
+		if (g_HudBarsArraySize)
+		{f_Bars_Iterate();}
+		break;
 
 	case NVSEMessagingInterface::kMessage_RuntimeScriptError:
 		//_MESSAGE("Received runtime script error message %s", msg->data);
@@ -405,7 +436,7 @@ void MessageHandler(NVSEMessagingInterface::Message* msg)
 }
 
 
-
+#include "Tomm_fn_Utility.h"
 #include "Tomm_fn_UI.h"
 #include "Tomm_fn_Misc.h"
 #include "Tomm_fn_TFC.h"
@@ -413,6 +444,10 @@ void MessageHandler(NVSEMessagingInterface::Message* msg)
 #include "Tomm_fn_INI.h"
 #include "Tomm_fn_Array.h"
 #include "Tomm_fn_Math.h"
+#include "Tomm_fn_HudBars.h"
+
+
+
 
 
 
@@ -596,6 +631,36 @@ bool NVSEPlugin_Load(const NVSEInterface* nvse)
 	/*62*/RegisterScriptCommand(Ar_GetRandomKey);
 	/*63*/REG_CMD_STR(Ar_GetRandomKeyMap);
 	/*64*/RegisterScriptCommand(Ar_HasInvalidRefs);
+	//  v.1.50
+	/*65*/RegisterScriptCommand(GetUIValueType); /////////////TEST TEST TEST
+	/*66*/RegisterScriptCommand(IsProgramRunning); 
+	/*67*/REG_CMD_ARR(GetFileTime);
+	/*68*/REG_CMD_STR(GetFileTimeSTR);
+	/*69*/RegisterScriptCommand(StringToClipboard);
+	/*70*/REG_CMD_STR(ClipboardToString);
+	/*71*/RegisterScriptCommand(DebugTextCreate);
+	/*72*/RegisterScriptCommand(DebugTextExists);
+	/*73*/RegisterScriptCommand(DebugTextSetString);
+	/*74*/RegisterScriptCommand(DebugTextDestroy);
+	/*75*/RegisterScriptCommand(DebugTextSetPos);
+	/*76*/RegisterScriptCommand(HudBarCreate);
+	/*77*/RegisterScriptCommand(HudBarSetMeterSize);
+	/*78*/RegisterScriptCommand(HudBarSetValueScriptVar);
+	/*79*/RegisterScriptCommand(HudBarSetValueFloat);
+	/*80*/RegisterScriptCommand(HudBarSetValuePercentage);
+	/*81*/RegisterScriptCommand(HudBarSetValueMax);
+	/*82*/RegisterScriptCommand(HudBarSetFrameImage);
+	/*83*/RegisterScriptCommand(HudBarSetMeterImage);
+	/*84*/RegisterScriptCommand(HudBarSetFrameVisible);
+	/*85*/RegisterScriptCommand(HudBarSetMeterVisible);
+	/*86*/RegisterScriptCommand(HudBarSetFrameSize);
+	/*87*/RegisterScriptCommand(HudBarShowBar);
+	/*87*/RegisterScriptCommand(HudBarSetTextPrefix);
+	/*87*/RegisterScriptCommand(HudBarSetTextPostFix);
+
+
+
+	///*66*/RegisterScriptCommand(SetTileValueAction);
 
 	//*61*/RegisterScriptCommand(UIUpdateField);
 	//*20*/REG_CMD_ARR(SupTestArray, Array);

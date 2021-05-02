@@ -10,10 +10,21 @@ DEFINE_COMMAND_PLUGIN(GetCursorTrait, "Gets cursor traits", 0, 1, kParams_Tomm_O
 DEFINE_COMMAND_PLUGIN(SetCursorTrait, "Sets cursor traits", 0, 2, kParams_Tomm_OneInt_OneFloat)
 DEFINE_COMMAND_PLUGIN(SetCursorTraitGradual, "Sets cursor trait gradually", 0, 5, kParams_Tomm_OneInt_ThreeOptFloats_OneOptInt)
 DEFINE_COMMAND_PLUGIN(DumpTileInfoToArray, "Dumps XML element info to array", 0, 1, kParams_Tomm_OneStringOptional)
+DEFINE_COMMAND_PLUGIN(GetUIValueType, "", 0, 1, kParams_Tomm_OneString)
+DEFINE_COMMAND_PLUGIN(DebugTextCreate, "", 0, 4, kParams_Tomm_DebugTextCreate)
+DEFINE_COMMAND_PLUGIN(DebugTextExists, "", 0, 1, kParams_Tomm_OneString)
+DEFINE_COMMAND_PLUGIN(DebugTextSetString, "", 0, 2, kParams_Tomm_TwoStrings)
+DEFINE_COMMAND_PLUGIN(DebugTextDestroy, "", 0, 1, kParams_Tomm_OneString)
+DEFINE_COMMAND_PLUGIN(DebugTextSetPos, "", 0, 3, kParams_Tomm_DebugTextSetPos)
 
 
 
-//DEFINE_COMMAND_PLUGIN(GetUITraitValueType, "Gets value type of component", 0, 1, kParams_Tomm_OneStringOptional)
+
+
+//DEFINE_COMMAND_PLUGIN(SetTileValueAction, "", 0, 2, kParams_Tomm_TwoStrings)
+
+
+
 
 
 void(__cdecl* HUDMainMenu_UpdateVisibilityState)(signed int) = (void(__cdecl*)(signed int))(0x771700); //Credits to lStewieAL - From Tweaks
@@ -75,7 +86,7 @@ Tile* __fastcall GetTargetComponent(const char* componentPath, Tile::Value** val
 
 
 
-NVSEArrayVar* TileArrayStore;
+
 
 
 void Tile::DumpArray(void)
@@ -435,3 +446,234 @@ bool Cmd_SetCursorTraitGradual_Execute(COMMAND_ARGS) ////////////SetUIFloatGradu
 }
 
 
+
+bool Cmd_GetUIValueType_Execute(COMMAND_ARGS)
+{
+	alignas(16) char s_strArgTemp2[0x4000];
+	if (ExtractArgsEx(EXTRACT_ARGS_EX, &s_strArgTemp2))
+	{
+		Tile::Value* tileVal = NULL;
+		if (GetTargetComponent(s_strArgTemp2, &tileVal) && tileVal)
+		{ 
+
+			if (tileVal->num)
+				*result = 1;
+			else if (tileVal->str)
+				*result = 2;
+			else if (tileVal->action)
+				*result = 3;
+			else
+				*result = 4;
+		}
+		else {*result = -1;}
+	}
+	return true;
+}
+
+
+bool f_DebugTextCreateSUPRect()
+{
+	Tile* component = GetTargetComponent("HUDMainMenu");
+	if (component)
+	{
+		char s_ToInject[0x4000]{};
+		sprintf(s_ToInject, "%s", "<rect name=\"SUPDebugText\"> <template name=\"SUPNVSETextTemplateDoNotUse\"> <rect name=\"TextTemplate\"> <text name=\"Text\"> <string></string> <font>1</font> <visible>1</visible>  <systemcolor>1</systemcolor>   </text>   </rect> </template>      </rect>");
+		FileStream tempFile;
+		if (tempFile.Create(kComponentTempXML))
+		{
+			tempFile.WriteStr(s_ToInject);
+			tempFile.Close();
+			component->ReadXML(kComponentTempXML) ? 1 : 0;
+			//Console_Print("FIRST TIME CREATING");
+
+			g_SUPRect = g_HUDMainMenu->tile->GetComponentTile("SUPDebugText");
+			remove(kComponentTempXML);
+			return true;
+		}
+	}
+
+}
+
+
+int f_DebugTextExists(char* s_textName)
+{
+	char s_ToCheck[0x4000]{};
+	sprintf(s_ToCheck, "%s%s/%s", "HUDMainMenu/SUPDebugText/", s_textName, "Text");
+	Tile* component = GetTargetComponent(s_ToCheck);
+	if (component) {return 1; }
+	else { return 0; }
+}
+
+
+bool Cmd_DebugTextCreate_Execute(COMMAND_ARGS)
+{
+	alignas(16) char s_textName[0x4000]{};
+	char s_ToInject[0x4000]{};
+	char s_StringName[0x4000]{};
+	float fXPos = 0,fYPos = 0;
+	if (ExtractArgsEx(EXTRACT_ARGS_EX, &s_textName,&fXPos,&fYPos,&s_StringName))
+	{
+
+		Tile* component = GetTargetComponent("HUDMainMenu");
+		TileMenu* menu = GetMenuTile("HUDMainMenu");
+
+		if (component)
+		{
+			if (g_SUPRect){}
+			else { f_DebugTextCreateSUPRect(); }
+
+			if (g_SUPRect) {}
+			else { 
+				*result = -2;
+				return true;
+			}
+
+			if (f_DebugTextExists(s_textName) == 1)
+			{
+				*result = -1;
+				return true;
+			}
+
+			component = menu->menu->AddTileFromTemplate(g_SUPRect, "SUPNVSETextTemplateDoNotUse");
+
+			if (component)
+			{
+				///Console_Print("NEW COMPONENT  EXISTS");
+				component->name.Set(s_textName);
+				component = component->GetComponentTile("Text");
+				if (component)
+				{
+					//component->name.Set(s_textName);
+					if (NUM_ARGS > 1 )
+						component->SetFloat(kTileValue_x, fXPos);
+
+					if (NUM_ARGS > 2)
+						component->SetFloat(kTileValue_y, fYPos);
+
+					if (NUM_ARGS > 3)
+						component->SetString(kTileValue_string, s_StringName);
+
+					*result = 1;
+				}
+				else {
+					component->Destroy(true);
+					*result = -3;
+				}
+			}
+			else { *result = -4; }
+		}
+	}
+
+
+	return true;
+}
+
+
+
+bool Cmd_DebugTextExists_Execute(COMMAND_ARGS)
+{
+	alignas(16) char s_textName[0x4000]{};
+
+	if (ExtractArgsEx(EXTRACT_ARGS_EX, &s_textName))
+	{
+		*result = f_DebugTextExists(s_textName);
+	}
+	return true;
+}
+
+
+
+bool Cmd_DebugTextSetString_Execute(COMMAND_ARGS)
+{
+	alignas(16) char s_textName[0x4000]{};
+	char s_ToCheck[0x4000]{};
+	char s_NewString[0x4000]{};
+	if (ExtractArgsEx(EXTRACT_ARGS_EX, &s_textName, &s_NewString))
+	{
+		sprintf(s_ToCheck, "%s%s/%s", "HUDMainMenu/SUPDebugText/", s_textName, "Text");
+		Tile* component = GetTargetComponent(s_ToCheck);
+		if (component)
+		{component->SetString(kTileValue_string, s_NewString);}
+	}
+	return true;
+}
+
+
+bool Cmd_DebugTextDestroy_Execute(COMMAND_ARGS)
+{
+	alignas(16) char s_textName[0x4000]{};
+	char s_ToCheck[0x4000]{};
+	if (ExtractArgsEx(EXTRACT_ARGS_EX, &s_textName))
+	{
+		sprintf(s_ToCheck, "%s%s", "HUDMainMenu/SUPDebugText/", s_textName);
+		Tile* component = GetTargetComponent(s_ToCheck);
+		if (component)
+		{component->Destroy(true);}
+	}
+	return true;
+}
+
+
+
+bool Cmd_DebugTextSetPos_Execute(COMMAND_ARGS)
+{
+	alignas(16) char s_textName[0x4000]{};
+	char s_ToCheck[0x4000]{};
+	char s_NewString[0x4000]{};
+	float fXPos, fYPos;
+	if (ExtractArgsEx(EXTRACT_ARGS_EX, &s_textName, &fXPos, &fYPos))
+	{
+		sprintf(s_ToCheck, "%s%s/%s", "HUDMainMenu/SUPDebugText/", s_textName, "Text");
+		Tile* component = GetTargetComponent(s_ToCheck);
+		if (component)
+		{
+			component->SetFloat(kTileValue_x, fXPos);
+			component->SetFloat(kTileValue_y, fYPos);
+		}
+	}
+	return true;
+}
+
+
+
+
+
+
+
+//bool Cmd_SetTileValueAction_Execute(COMMAND_ARGS)
+//{
+//	alignas(16) char s_TileSource[0x4000];
+//	alignas(16) char s_TileTarget[0x4000];
+//	if (ExtractArgsEx(EXTRACT_ARGS_EX, &s_TileSource,&s_TileTarget))
+//	{
+//		Tile::Value* tileValSource = NULL;
+//		Tile::Value* tileValTarget = NULL;
+//		if (GetTargetComponent(s_TileSource, &tileValSource) && tileValSource)
+//		{
+//
+//			if (tileValSource->action)
+//			{
+//
+//
+//				if (GetTargetComponent(s_TileTarget, &tileValTarget) && tileValTarget)
+//				{
+//					if (tileValTarget->action)
+//					{
+//						Console_Print("OLD SOURCE Action %08X", tileValSource->action);
+//						Console_Print("OLD TARGET Action %08X", tileValTarget->action);
+//						tileValTarget->action = tileValSource->action;
+//						Console_Print("NEW TARGET Action %08X", tileValTarget->action);
+//						*result = 1;
+//					}
+//
+//				}
+//
+//			}
+//
+//		}
+//		else { *result = -1; }
+//	}
+//	return true;
+//}
+
+//SetTileValueAction "HUDMainMenu\VRWM_HUD\VRWMTextModOff1\red" "HUDMainMenu\VRWM_HUD\VRWMTextModOff1\green"

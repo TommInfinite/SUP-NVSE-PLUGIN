@@ -158,6 +158,15 @@
     <ClInclude Include="Tomm_fn_Math.h">
       <Filter>functions</Filter>
     </ClInclude>
+    <ClInclude Include="Tomm_fn_Utility.h">
+      <Filter>functions</Filter>
+    </ClInclude>
+    <ClInclude Include="Tomm_HUDBars.h">
+      <Filter>functions</Filter>
+    </ClInclude>
+    <ClInclude Include="Tomm_fn_HudBars.h">
+      <Filter>functions</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="exports.def" />

@@ -1,7 +1,6 @@
 #pragma once
 
 DEFINE_COMMAND_PLUGIN(GetSUPVersion, "Get plugin version", 0, 0, NULL)
-DEFINE_COMMAND_PLUGIN(GetFileSize, "Get file size", 0, 1, kParams_Tomm_OneString)
 DEFINE_COMMAND_PLUGIN(GetLoadedSaveSize, "", 0, 1, kParams_Tomm_OneInt)
 DEFINE_COMMAND_PLUGIN(GetSavedSaveSize, "", 0, 1, kParams_Tomm_OneInt)
 DEFINE_COMMAND_PLUGIN(GetSaveName, "", 0, 1, kParams_Tomm_OneInt)
@@ -10,9 +9,6 @@ DEFINE_COMMAND_PLUGIN(IsScriptMarkedOnLoad, "", 0, 1, kParams_Tomm_OneForm)
 DEFINE_COMMAND_PLUGIN(GetNearCells, "", 0, 1, kParams_Tomm_OneInt)
 DEFINE_COMMAND_PLUGIN(GetNearMapMarkers, "", 0, 1, kParams_Tomm_OneInt)
 DEFINE_COMMAND_PLUGIN(SUPTest, "", 0, 0, NULL)
-DEFINE_COMMAND_PLUGIN(GetPCTrait, "", 0, 1, kParams_Tomm_OneInt)
-DEFINE_COMMAND_PLUGIN(GetMousePosition, "", 0, 2, kParams_Tomm_TwoScriptVars)
-DEFINE_COMMAND_PLUGIN(FakeMouseMovement, "", 0, 2, kParams_Tomm_TwoFloats)
 DEFINE_COMMAND_PLUGIN(GetGrenadeTimeHeld, "", 0, 0, NULL)
 DEFINE_COMMAND_PLUGIN(IsPlayerOverencumbered, "", 0, 0, NULL)
 DEFINE_COMMAND_PLUGIN(SetCaughtPCPickpocketting, "", 1, 1, kParams_Tomm_OneIntOptional)
@@ -41,43 +37,7 @@ bool Cmd_GetSUPVersion_Execute(COMMAND_ARGS)
 
 
 
-bool Cmd_GetFileSize_Execute(COMMAND_ARGS)
-{
-	alignas(16) char s_strArgTemp[0x4000];
-	if (ExtractArgsEx(EXTRACT_ARGS_EX, &s_strArgTemp))
-	{
-		if (strstr(s_strArgTemp, ":\\"))
-		{ 
-			*result = -1;
-			return true;
-		}
-		if (strstr(s_strArgTemp, "..\\")) // thanks C6 
-		{
-			*result = -1;
-			return true; 
-		}
-		if (strstr(s_strArgTemp, "://"))
-		{
-			*result = -1;
-			return true;
-		}
-		if (strstr(s_strArgTemp, "..//")) 
-		{
-			*result = -1;
-			return true;
-		}
-		FileStream srcFile;
-		if (!srcFile.Open(s_strArgTemp))
-		{
-			*result = -1;
-			return true;
-		}
-		UInt32 length = srcFile.GetLength();
-		*result = length;
-		srcFile.Close();
-		return true;
-	}
-}
+
 
 
 //0 for FOS
@@ -367,71 +327,6 @@ bool Cmd_GetNearMapMarkers_Execute(COMMAND_ARGS) // from NVSE
 }
 
 
-WINBASEAPI
-DWORD
-WINAPI
-GetTickCount(VOID);
-
-bool Cmd_GetPCTrait_Execute(COMMAND_ARGS) //https://github.com/quantumcore/supercharge/issues/1
-{
-	int iTrait;
-	*result = -1;
-	if (ExtractArgsEx(EXTRACT_ARGS_EX, &iTrait))
-	{
-		if (iTrait == 0 || iTrait == 1)
-		{
-			NTSTATUS(WINAPI * RtlGetVersion)(LPOSVERSIONINFOEXW);
-			OSVERSIONINFOEXW osInfo;
-			*reinterpret_cast<FARPROC*>(&RtlGetVersion) = GetProcAddress(GetModuleHandleA("ntdll"), "RtlGetVersion");
-			if (nullptr != RtlGetVersion)
-			{
-				osInfo.dwOSVersionInfoSize = sizeof osInfo;
-				RtlGetVersion(&osInfo);
-				if (iTrait == 0)
-				{*result = osInfo.dwMajorVersion;}
-				else { *result = osInfo.dwMinorVersion; }
-			}
-			return true;
-		}
-		else if (iTrait == 2 || iTrait == 3 || iTrait == 4)
-		{
-			MEMORYSTATUSEX statex;
-			statex.dwLength = sizeof(statex);
-			GlobalMemoryStatusEx(&statex);
-			if (iTrait == 2)
-			{*result = statex.ullTotalPhys / 1024;}
-			else if (iTrait == 3)
-			{*result = statex.ullAvailPhys / 1024;}
-			else if (iTrait == 4)
-			{*result = statex.dwMemoryLoad;}
-		}else if (iTrait == 5)
-		{*result = GetTickCount();}
-	}
-	return true;
-}
-
-
-
-void MouseMove(float x, float y)
-{
-	INPUT  Input = { 0 };
-	Input.type = INPUT_MOUSE;
-	Input.mi.dwFlags = MOUSEEVENTF_MOVE;
-	Input.mi.dx = x;
-	Input.mi.dy = y;
-	::SendInput(1, &Input, sizeof(INPUT));
-}
-
-
-bool Cmd_FakeMouseMovement_Execute(COMMAND_ARGS)
-{
-	float ChangeX, ChangeY;
-	if (ExtractArgsEx(EXTRACT_ARGS_EX, &ChangeX, &ChangeY))
-	{
-		MouseMove(ChangeX, ChangeY);
-		return true;
-	}
-}
 
 
 
@@ -485,20 +380,6 @@ bool Cmd_IsPlayerOverencumbered_Execute(COMMAND_ARGS)
 }
 
 
-bool Cmd_GetMousePosition_Execute(COMMAND_ARGS)
-{
-	ScriptVar* outX, * outY;
-	if (ExtractArgsEx(EXTRACT_ARGS_EX, &outX, &outY))
-	{
-		POINT p;
-		if (GetCursorPos(&p))
-		{
-			outX->data.num = p.x;
-			outY->data.num = p.y;
-		}
-	}
-	return true;
-}
 
 
 bool Cmd_LunetteCMD_Execute(COMMAND_ARGS)
@@ -786,9 +667,21 @@ bool Cmd_FindRandomActor_Execute(COMMAND_ARGS)
 	return true;
 }
 
+
+
+
+
+
+
+
+
+
+
 bool Cmd_SUPTest_Execute(COMMAND_ARGS)
 {
 
+
+	
 
 	return true;
 }

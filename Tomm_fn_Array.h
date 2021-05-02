@@ -150,35 +150,20 @@ bool Cmd_Ar_GetRandomKeyMap_Execute(COMMAND_ARGS)
 	if (size > 0)
 	{
 		for (int i = 0; i < size; i++) {
-
-
-			//Console_Print("type >>> %d", iType);
-
 			if (i == iChosenKeyNum) 
 			{
 				iType = elements[i].GetType();
-
 				if (iType == 3) //String
-				{
-					//Console_Print("%s %d,value is>>> %s", "ArrayEntry>>", i, keys[i].str);
-					sprintf(Cresult, "%s", keys[i].str);
-				}
+				{sprintf(Cresult, "%s", keys[i].str);}
 				else if (iType == 1) //Number
-				{
-					//Console_Print("%s %d,value is>>> %f", "ArrayEntry>>", i, keys[i].num);
-					sprintf(Cresult, "%f", keys[i].num);
-				}
-				//Console_Print("SRESULT IS >>> %s", Cresult);
+				{sprintf(Cresult, "%f", keys[i].num);}
 			}
 		}
 	}
-
 	delete[] keys;
 	delete[] elements;
 	if (Cresult)
-	{
-		StrIfc->Assign(PASS_COMMAND_ARGS, Cresult);
-	}
+	{StrIfc->Assign(PASS_COMMAND_ARGS, Cresult);}
 	return true;
 }
 

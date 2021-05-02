@@ -215,6 +215,22 @@ ParamInfo kParams_Tomm_OneString[1] =
 	{"String", kParamType_String, 0},
 };
 
+
+
+ParamInfo kParams_Tomm_OneString_OneInt[2] =
+{
+	{"String", kParamType_String, 0},
+	{"int", kParamType_Integer, 0 },
+};
+
+ParamInfo kParams_Tomm_OneString_TwoInts[3] =
+{
+	{"String", kParamType_String, 0},
+	{"int", kParamType_Integer, 0 },
+	{"int", kParamType_Integer, 0 },
+};
+
+
 ParamInfo kParams_Tomm_TwoStrings[2] =
 {
 	{"String", kParamType_String, 0},
@@ -368,6 +384,84 @@ static ParamInfo kParams_Tomm_FindClosestActor[6] =
 		{ "int", kParamType_Integer, 1 },
 		{ "float", kParamType_Float, 1 },
 };
+
+
+static ParamInfo kParams_Tomm_DebugTextCreate[4] =
+{
+	{"String", kParamType_String, 0},
+	{ "float", kParamType_Float, 1 },
+	{ "float", kParamType_Float, 1 },
+	{"String", kParamType_String, 1},
+};
+
+
+static ParamInfo kParams_Tomm_DebugTextSetPos[3] =
+{
+	{"String", kParamType_String, 0},
+	{ "float", kParamType_Float, 0 },
+	{ "float", kParamType_Float, 0 },
+};
+
+
+
+static ParamInfo kParams_Tomm_HudBarCreate[4] =
+{
+	{"String", kParamType_String, 0},
+	{ "float", kParamType_Float, 0 },
+	{ "float", kParamType_Float, 0 },
+	{ "int", kParamType_Integer, 0 },
+};
+
+static ParamInfo kParams_Tomm_HudBarSetImageSize[3] =
+{
+	{"String", kParamType_String, 0},
+	{ "float", kParamType_Float, 0 },
+	{ "float", kParamType_Float, 0 },
+};
+
+
+static ParamInfo kParams_Tomm_HudBarSetScriptVariable[2] =
+{
+	{"String", kParamType_String, 0},
+	{"Variable", kParamType_ScriptVariable, 0},
+};
+
+static ParamInfo kParams_Tomm_HudBarSetFloatValue[2] =
+{
+	{"String", kParamType_String, 0},
+	{ "float", kParamType_Float, 0 },
+};
+
+
+
+static ParamInfo kParams_Tomm_HudBarSetString[2] =
+{
+	{"String", kParamType_String, 0},
+	{"String", kParamType_String, 0},
+};
+
+static ParamInfo kParams_Tomm_HudBarSetInt[2] =
+{
+	{"String", kParamType_String, 0},
+	{ "int", kParamType_Integer, 0 },
+};
+
+static ParamInfo kParams_Tomm_HudBarSetFloat[2] =
+{
+	{"String", kParamType_String, 0},
+	{ "float", kParamType_Float, 0 },
+};
+
+
+
+
+//ParamInfo kParams_Tomm_CreateDebugText[3] =
+//{
+//	{"String", kParamType_String, 0},
+//	{ "float", kParamType_Float, 0 },
+//	{ "float", kParamType_Float, 0 },
+//};
+
 
 
 
