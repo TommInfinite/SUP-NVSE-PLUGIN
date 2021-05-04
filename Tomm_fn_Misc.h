@@ -1,5 +1,6 @@
 #pragma once
 
+
 DEFINE_COMMAND_PLUGIN(GetSUPVersion, "Get plugin version", 0, 0, NULL)
 DEFINE_COMMAND_PLUGIN(GetLoadedSaveSize, "", 0, 1, kParams_Tomm_OneInt)
 DEFINE_COMMAND_PLUGIN(GetSavedSaveSize, "", 0, 1, kParams_Tomm_OneInt)
@@ -18,6 +19,7 @@ DEFINE_COMMAND_PLUGIN(FindClosestActorFromRef, "", 1, 3, kParams_Tomm_TwoIntsOpt
 DEFINE_COMMAND_PLUGIN(FindClosestActor, "", 0, 6, kParams_Tomm_FindClosestActor)
 DEFINE_COMMAND_PLUGIN(FindRandomActorFromRef, "", 1, 3, kParams_Tomm_TwoIntsOptional_OneFloatOptional)
 DEFINE_COMMAND_PLUGIN(FindRandomActor, "", 0, 6, kParams_Tomm_FindClosestActor)
+DEFINE_COMMAND_PLUGIN(CallFunctionNextFrame, "", 0, 1, kParams_Tomm_CallFunctionNextFrame)
 
 
 
@@ -313,6 +315,7 @@ bool Cmd_GetNearMapMarkers_Execute(COMMAND_ARGS) // from NVSE
 			if (pRefr)
 				if (pRefr->baseForm->typeID == 32)
 				{
+
 					ExtraMapMarker* xMarker = GetExtraType(&pRefr->extraDataList, MapMarker);
 					if (xMarker)	{
 						ArrIfc->AppendElement(MarkArr, NVSEArrayElement(pRefr));
@@ -324,6 +327,8 @@ bool Cmd_GetNearMapMarkers_Execute(COMMAND_ARGS) // from NVSE
 
 	ArrIfc->AssignCommandResult(MarkArr, result);
 	return true;
+
+
 }
 
 
@@ -678,19 +683,117 @@ bool Cmd_FindRandomActor_Execute(COMMAND_ARGS)
 
 
 
+//#include <iostream>
+//#include <string>
+//#include <map>
+//#include <fstream>
+//
+//using namespace std;
+//map <string, HUDBarElement*> BARS_MAP;
+//
+//int STD_STRING_TEST()
+//{
+//
+//
+//	HUDBarElement* HUDBAR = new HUDBarElement;
+//	HUDBAR->MeterType = GetRandomIntInRange(0,10000);
+//	BARS_MAP.insert(std::pair<string, HUDBarElement*>("ONE", HUDBAR));
+//
+//
+//	HUDBAR = new HUDBarElement;
+//	HUDBAR->MeterType = GetRandomIntInRange(0, 10000);
+//	BARS_MAP.insert(std::pair<string, HUDBarElement*>("TWO", HUDBAR));
+//
+//	HUDBAR = new HUDBarElement;
+//	HUDBAR->MeterType = GetRandomIntInRange(0, 10000);
+//	BARS_MAP.insert(std::pair<string, HUDBarElement*>("THREE", HUDBAR));
+//
+//
+//	for (const pair<const string, HUDBarElement*>& p : BARS_MAP) {
+//		//Console_Print(" MeterType is %d ",p.second->MeterType);
+//		Console_Print("String is %s, MeterType is %d ", p.first.c_str(), p.second->MeterType);
+//	}
+//	Console_Print("Array size is %d ",BARS_MAP.size());
+//	Console_Print("FIND TWO>>> %d ", BARS_MAP["TWO"]->MeterType);
+//	
+//
+//
+//
+//	char s_BarName[0x4000]{};
+//	sprintf(s_BarName, "TWO");
+//	char* s_BarName2 = s_BarName;
+//
+//	BARS_MAP.erase(s_BarName2);
+//
+//	Console_Print("AFTER ERASING");
+//
+//
+//
+//	for (const pair<const string, HUDBarElement*>& p : BARS_MAP) {
+//		//Console_Print(" MeterType is %d ",p.second->MeterType);
+//		Console_Print("String is %s, MeterType is %d ", p.first.c_str(), p.second->MeterType);
+//	}
+//
+//
+//	Console_Print("END");
+//	//map <string, HUDBarElement>::iterator cur;
+//
+//	//for (cur = BARS_MAP.begin();cur != BARS_MAP.end();cur++)
+//	//{
+//	//	Console_Print("MeterType is ", (*cur).second.MeterType);
+//	//}
+//
+//
+//	//HUDBAR = new HUDBarElement;
+//	//HUDBAR->MeterType = 2;
+//	//words.insert(std::pair<string, HUDBarElement*>("TWO", HUDBAR));
+//
+//
+//
+//	//HUDBAR = new HUDBarElement;
+//	//HUDBAR->MeterType = 3;
+//	//words.insert(std::pair<string, HUDBarElement*>("THREE", HUDBAR));
+//
+//
+//
+//
+//	//while (in >> word)
+//	//{
+//	//	words[word]++;
+//	//}
+//	//ofstream out;
+//	//out.open("out.txt");
+//	//int count = 0;
+//	//map <string, int>::iterator cur;
+//	//out << "Words count:" << endl;
+//
+//
+//
+//	return 0;
+//}
+
+//bool (*FunctionCallScript)(Script* funcScript, TESObjectREFR* callingObj, TESObjectREFR* container, NVSEArrayElement* result, UInt8 numArgs, ...);
 
 
-
-bool Cmd_SUPTest_Execute(COMMAND_ARGS)
+bool Cmd_CallFunctionNextFrame_Execute(COMMAND_ARGS)
 {
+	Script* script = NULL;
+	NVSEArrayElement element;
 
+	if (!ExtractArgsEx(EXTRACT_ARGS_EX, &script )) return true; // From JIP
+	g_script->CallFunction(script, thisObj, NULL, &element, NULL);
 
-	
-
+	//Console_Print("RESULT is--> %f", element->num);
 	return true;
 }
 
 
+bool Cmd_SUPTest_Execute(COMMAND_ARGS)
+{
+	//STD_STRING_TEST();
+
+	return true;
+}
 
 
 

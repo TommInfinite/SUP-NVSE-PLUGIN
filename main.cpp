@@ -58,6 +58,7 @@ NVSECommandTableInterface* g_cmdTable;
 const CommandInfo* g_TFC;
 
 bool (*ExtractArgsEx)(COMMAND_ARGS_EX, ...);
+
 CommandInfo* (*GetCmdByOpcode)(UInt32 opcode);
 Cmd_Execute KillActor;
 NVSEStringVarInterface* StrIfc = NULL;
@@ -70,6 +71,11 @@ PlayerCharacter* g_ThePlayer = NULL;
 Tile* g_kMenuRoot = NULL;
 Tile* g_Cursor = NULL;
 DataHandler* g_dataHandler = nullptr; // from JG
+
+
+
+
+FontManagerJIP* g_fontManager = NULL; // FROM JIP
 
 //PlayerCharacter* g_ThePlayer = *(PlayerCharacter**)0x11DEA3C;
 //VATSCameraData* g_VATSCameraData = (VATSCameraData*)0x11F2250; // From JIP
@@ -106,7 +112,7 @@ UnorderedMap<const char*, UInt32> s_menuNameToID({ {"MessageMenu", kMenuType_Mes
 typedef NVSEArrayVarInterface::Array NVSEArrayVar;
 typedef NVSEArrayVarInterface::Element NVSEArrayElement;
 
-
+bool (*FunctionCallScript)(Script* funcScript, TESObjectREFR* callingObj, TESObjectREFR* container, NVSEArrayElement* result, UInt8 numArgs, ...);
 #include <Tomm_HUDBars.h>
 
 
@@ -234,7 +240,7 @@ void OnDeferredInit()
 }
 
 
-const std::string& GetFalloutDirectorySUP(void)
+void GetFalloutDirectorySUP(void)
 {
 	static std::string s_falloutDirectory;
 
@@ -269,7 +275,6 @@ const std::string& GetFalloutDirectorySUP(void)
 
 
 	strcpy(FalloutFolderPath, s_falloutDirectory.c_str());
-
 }
 
 
@@ -297,10 +302,10 @@ const std::string& GetFalloutDirectorySUP(void)
 
 
 extern UnorderedSet<UInt32> s_gameLoadedInformedScriptsSUP;
-
 #if RUNTIME
 NVSEScriptInterface* g_script;
 #endif
+
 // This is a message handler for nvse events
 // With this, plugins can listen to messages such as whenever the game loads
 void MessageHandler(NVSEMessagingInterface::Message* msg)
@@ -411,6 +416,7 @@ void MessageHandler(NVSEMessagingInterface::Message* msg)
 		g_kMenuRoot = g_interfaceManager->menuRoot;
 		g_Cursor = g_interfaceManager->cursor;
 		KillActor = GetCmdByOpcode(0x108B)->execute;
+		g_fontManager = *(FontManagerJIP**)0x11F33F8; // From JIP
 		g_dataHandler = DataHandler::Get();
 		
 		//WriteRelJump(0xA23252, 0xA23296);
@@ -454,6 +460,7 @@ void MessageHandler(NVSEMessagingInterface::Message* msg)
 
 
 
+
 #if RUNTIME
 //In here we define a script function
 //Script functions must always follow the Cmd_FunctionName_Execute naming convention
@@ -488,6 +495,7 @@ bool NVSEPlugin_Query(const NVSEInterface* nvse, PluginInfo* info)
 	{
 		g_script = (NVSEScriptInterface*)nvse->QueryInterface(kInterface_Script);
 		ExtractArgsEx = g_script->ExtractArgsEx;
+		FunctionCallScript = g_script->CallFunction;
 		StrIfc = (NVSEStringVarInterface*)nvse->QueryInterface(kInterface_StringVar); // From JG
 
 		ArrIfc = (NVSEArrayVarInterface*)nvse->QueryInterface(kInterface_ArrayVar); // From JG
@@ -638,28 +646,31 @@ bool NVSEPlugin_Load(const NVSEInterface* nvse)
 	/*68*/REG_CMD_STR(GetFileTimeSTR);
 	/*69*/RegisterScriptCommand(StringToClipboard);
 	/*70*/REG_CMD_STR(ClipboardToString);
-	/*71*/RegisterScriptCommand(DebugTextCreate);
-	/*72*/RegisterScriptCommand(DebugTextExists);
-	/*73*/RegisterScriptCommand(DebugTextSetString);
-	/*74*/RegisterScriptCommand(DebugTextDestroy);
-	/*75*/RegisterScriptCommand(DebugTextSetPos);
-	/*76*/RegisterScriptCommand(HudBarCreate);
-	/*77*/RegisterScriptCommand(HudBarSetMeterSize);
-	/*78*/RegisterScriptCommand(HudBarSetValueScriptVar);
-	/*79*/RegisterScriptCommand(HudBarSetValueFloat);
-	/*80*/RegisterScriptCommand(HudBarSetValuePercentage);
-	/*81*/RegisterScriptCommand(HudBarSetValueMax);
-	/*82*/RegisterScriptCommand(HudBarSetFrameImage);
-	/*83*/RegisterScriptCommand(HudBarSetMeterImage);
-	/*84*/RegisterScriptCommand(HudBarSetFrameVisible);
-	/*85*/RegisterScriptCommand(HudBarSetMeterVisible);
-	/*86*/RegisterScriptCommand(HudBarSetFrameSize);
-	/*87*/RegisterScriptCommand(HudBarShowBar);
-	/*87*/RegisterScriptCommand(HudBarSetTextPrefix);
-	/*87*/RegisterScriptCommand(HudBarSetTextPostFix);
-
-
-
+	/*71*/RegisterScriptCommand(GetFontTrait);
+	/*72*/RegisterScriptCommand(DebugTextCreate);
+	/*73*/RegisterScriptCommand(DebugTextExists);
+	/*74*/RegisterScriptCommand(DebugTextSetString);
+	/*75*/RegisterScriptCommand(DebugTextDestroy);
+	/*76*/RegisterScriptCommand(DebugTextSetPos);
+	/*77*/RegisterScriptCommand(HudBarCreate)
+	/*78*/RegisterScriptCommand(HudBarDestroy);
+	/*79*/RegisterScriptCommand(HudBarGetBarType);
+	/*80*/RegisterScriptCommand(HudBarExists);
+	/*81*/RegisterScriptCommand(HudBarSetAutoPos);
+	/*82*/RegisterScriptCommand(HudBarSetValueScriptVar);
+	/*83*/RegisterScriptCommand(HudBarSetValueFloat);
+	/*84*/RegisterScriptCommand(HudBarSetValuePercentage);
+	/*85*/RegisterScriptCommand(HudBarSetValueMax);
+	/*86*/RegisterScriptCommand(HudBarSetTextString);
+	/*87*/RegisterScriptCommand(HudBarSetPos);
+	/*88*/RegisterScriptCommand(HudBarSetVisible);
+	/*89*/RegisterScriptCommand(HudBarSetTexture);
+	/*90*/RegisterScriptCommand(HudBarSetSize);
+	/*91*/RegisterScriptCommand(HudBarSetBarTrait);
+	/*92*/RegisterScriptCommand(HudBarSetMeterTrait);
+	/*92*/RegisterScriptCommand(CallFunctionNextFrame);
+	/*82*/RegisterScriptCommand(HudBarSetValueUDF);
+	/*82*/RegisterScriptCommand(HudBarShowBar);
 	///*66*/RegisterScriptCommand(SetTileValueAction);
 
 	//*61*/RegisterScriptCommand(UIUpdateField);

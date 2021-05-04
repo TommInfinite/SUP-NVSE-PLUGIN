@@ -420,15 +420,56 @@ static ParamInfo kParams_Tomm_HudBarSetImageSize[3] =
 };
 
 
-static ParamInfo kParams_Tomm_HudBarSetScriptVariable[2] =
+static ParamInfo kParams_Tomm_HudBarSetScriptVariable[3] =
 {
 	{"String", kParamType_String, 0},
 	{"Variable", kParamType_ScriptVariable, 0},
+	{ "int", kParamType_Integer, 1 },
 };
 
 static ParamInfo kParams_Tomm_HudBarSetFloatValue[2] =
 {
 	{"String", kParamType_String, 0},
+	{ "float", kParamType_Float, 0 },
+};
+
+static ParamInfo kParams_Tomm_HudBarSetFloatValueEx[3] =
+{
+	{"String", kParamType_String, 0},
+	{ "int", kParamType_Integer, 0 },
+	{ "float", kParamType_Float, 0 },
+};
+
+
+static ParamInfo kParams_Tomm_HudBarSetTraitInt[3] =
+{
+	{"String", kParamType_String, 0},
+	{ "int", kParamType_Integer, 0 },
+	{ "int", kParamType_Integer, 0 },
+};
+
+
+
+static ParamInfo kParams_Tomm_HudBarSetFloatValueAlt[3] =
+{
+	{"String", kParamType_String, 0},
+	{ "float", kParamType_Float, 0 },
+	{ "int", kParamType_Integer, 1 },
+};
+
+
+static ParamInfo kParams_Tomm_HudBarSetTwoFloatValues[3] =
+{
+	{"String", kParamType_String, 0},
+	{ "float", kParamType_Float, 0 },
+	{ "float", kParamType_Float, 0 },
+};
+
+static ParamInfo kParams_Tomm_HudBarSetTwoFloatValuesEx[4] =
+{
+	{"String", kParamType_String, 0},
+	{ "int", kParamType_Integer, 0 },
+	{ "float", kParamType_Float, 0 },
 	{ "float", kParamType_Float, 0 },
 };
 
@@ -440,11 +481,29 @@ static ParamInfo kParams_Tomm_HudBarSetString[2] =
 	{"String", kParamType_String, 0},
 };
 
+
+static ParamInfo kParams_Tomm_HudBarSetStringEx[3] =
+{
+	{"String", kParamType_String, 0},
+	{ "int", kParamType_Integer, 0 },
+	{"String", kParamType_String, 0},
+};
+
+
+
 static ParamInfo kParams_Tomm_HudBarSetInt[2] =
 {
 	{"String", kParamType_String, 0},
 	{ "int", kParamType_Integer, 0 },
 };
+
+static ParamInfo kParams_Tomm_HudBarSetIntEx[3] =
+{
+	{"String", kParamType_String, 0},
+	{ "int", kParamType_Integer, 0 },
+	{ "int", kParamType_Integer, 0 },
+};
+
 
 static ParamInfo kParams_Tomm_HudBarSetFloat[2] =
 {
@@ -452,6 +511,21 @@ static ParamInfo kParams_Tomm_HudBarSetFloat[2] =
 	{ "float", kParamType_Float, 0 },
 };
 
+
+static ParamInfo kParams_Tomm_CallFunctionNextFrame[1] =
+{
+	{"Form", kParamType_AnyForm, 0},
+};
+
+
+static ParamInfo kParams_Tomm_HudBarSetValueUDF[4] =
+{
+	{"String", kParamType_String, 0},
+	{"Form", kParamType_AnyForm, 0},
+	{ "int", kParamType_Integer, 1 },
+	{"Object Ref", kParamType_ObjectRef, 1}
+
+};
 
 
 

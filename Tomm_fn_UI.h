@@ -16,6 +16,8 @@ DEFINE_COMMAND_PLUGIN(DebugTextExists, "", 0, 1, kParams_Tomm_OneString)
 DEFINE_COMMAND_PLUGIN(DebugTextSetString, "", 0, 2, kParams_Tomm_TwoStrings)
 DEFINE_COMMAND_PLUGIN(DebugTextDestroy, "", 0, 1, kParams_Tomm_OneString)
 DEFINE_COMMAND_PLUGIN(DebugTextSetPos, "", 0, 3, kParams_Tomm_DebugTextSetPos)
+DEFINE_COMMAND_PLUGIN(GetFontTrait, "", 0, 2, kParams_Tomm_TwoInts)
+
 
 
 
@@ -637,8 +639,27 @@ bool Cmd_DebugTextSetPos_Execute(COMMAND_ARGS)
 
 
 
+// baseHeight == TileHeight
+// LineHeight == Real Height
+bool Cmd_GetFontTrait_Execute(COMMAND_ARGS) //Long wanted.
+{
+	int iFontID, iTrait;
+	if (ExtractArgsEx(EXTRACT_ARGS_EX, &iFontID, &iTrait) && iFontID && (iFontID <= 89) && (iFontID != 9))
+	{
+		FontInfoJIP* fontInfo = g_fontManager->fontInfos[iFontID - 1];
 
-
+		if (fontInfo)
+		{
+			switch (iTrait) {
+			case 0:
+				*result = fontInfo->bufferData->baseHeight;
+			case 1:
+				*result = fontInfo->bufferData->lineHeight;
+			}
+		}
+	}
+	return true;
+}
 
 //bool Cmd_SetTileValueAction_Execute(COMMAND_ARGS)
 //{
