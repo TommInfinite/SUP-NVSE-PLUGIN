@@ -1,5 +1,8 @@
 #pragma once
 
+using namespace std;
+
+
 #define k_HBMeterTypeHorizontal 0
 #define k_HBMeterTypeVertical 1
 #define k_HBMeterTypeAlpha 2
@@ -9,6 +12,8 @@
 #define	k_HBValueTypeNoScriptVar 0
 #define k_HBValueTypeScriptVar 1
 #define k_HBValueTypeScriptFunction 2
+
+int iSkipFrame;
 
 
 
@@ -21,16 +26,21 @@ public:
 	public:
 
 		//Main
+		int ID = 0;
 		int iBarVisible = 0;
-		int iReasonHidden = 0;
-		int iMenuTypeShow = 0;
+		int iHidden = 0;
 		int iShowMaxValue = 0;
+		int iRemoveOnGameLoad = 0;
+
+
+
 		char Name[0x4000]{};
 		int MeterType = k_HBMeterTypeHorizontal;
 		int ValueType = k_HBValueTypeNoScriptVar;
 		int TileTextAdded = 0;
 		int TileFrameAdded = 0;
 		int TileMeterAdded = 0;
+		int TileImageExAdded = 0;
 		float Value = 0;
 		float MaxValue = 100;
 		UInt8 modIdx = -1;
@@ -40,6 +50,19 @@ public:
 		Tile* TileFrame = NULL;
 		Tile* TileMeter = NULL;
 		Tile* TileText = NULL;
+		Tile* TileImageEx = NULL;
+
+		//Gradual Vanishing\appearing
+		int iGradualVanishing = 1;
+		int iGradualAppearing = 1;
+		int iGradualVanishingMovement = 1;
+		int iGradualAppearingMovement = 1;
+		float fGradualVanishingPosShift = -200;
+		float fGradualAppearingPosShift = -200;
+		float fGradualVanishingTimer = 0.2;
+		float fGradualAppearingTimer = 0.2;
+		float fRectPosX = 0;
+		float fRectPosY = 0;
 
 		//Size
 		float MeterWidth = 0;
@@ -50,6 +73,11 @@ public:
 		float FrameHeight = 0;
 		float FrameWidthAlt = 0;
 		float FrameHeightAlt = 0;
+		float ImageExWidth = 0;
+		float ImageExHeight = 0;
+		float ImageExWidthAlt = 0;
+		float ImageExHeightAlt = 0;
+
 		float Indent = 0;
 
 
@@ -67,6 +95,26 @@ public:
 		//MeterTypeText
 		char Prefix[0x4000]{};
 		char PostFix[0x4000]{};
+
+
+		//UpdateFrame
+		float fCurTimer = 0.1;
+		float fUpdateTimer = 0.1;
+
+
+		//VisibilityFlags
+		int iMenuTypeShow = 0;
+		int iDisableControlMovement = 0;
+		int iDisableWhenSneaking = 0;
+		int iDisableWhenCombat = 0;
+		int iDisableWhenAiming = 0;
+
+
+		bool operator==(const HudBar& other) const
+		{
+			return ID == other.ID;
+		}
+
 	};
 
 
@@ -75,11 +123,12 @@ public:
 
 
 typedef HUDBarsInterface::HudBar HUDBarElement;
-HUDBarElement g_HUDBArsArray[100]{};
+
 int g_HudBarsArraySize = 0;
 
 
-
+vector<HUDBarElement> g_HUDBArsArrayV;
+int g_HUDBArsArrayID = 0;
 
 
 
@@ -92,24 +141,41 @@ void f_Bars_BarSetHidden(int iKey, int iRequest)
 
 
 
-
-
-void f_Bars_BarDestroy(int iKey)
+vector<HUDBarElement>::iterator f_Bars_BarDestroy(vector<HUDBarElement>::iterator it)
 {
-	HudBarIterElement.TileRect->Destroy(true);
 
-	delete &HudBarIterElement;
+	_MESSAGE("Destroying bar named::->>%s, ID::%d", HudBarIterElementV.Name, HudBarIterElementV.ID);
 
-	HUDBarElement* element = &g_HUDBArsArray[iKey];
-	delete element;
-
+	HudBarIterElementV.TileRect->Destroy(true);
 	g_HudBarsArraySize -= 1;
-	for (int j = iKey; j < g_HudBarsArraySize; j++)
-		g_HUDBArsArray[j] = g_HUDBArsArray[j + 1];
+	it = g_HUDBArsArrayV.erase(it);
+	return it;
 }
 
 
+void f_Bars_BarRemoveOnGameLoad()
+{
+	if (g_HudBarsArraySize > 0)
+	{
 
+			vector<HUDBarElement>::iterator it;
+			for (it = g_HUDBArsArrayV.begin(); it != g_HUDBArsArrayV.end();)
+			{
+
+				if ( HudBarIterElementV.iRemoveOnGameLoad == 1)
+				{
+					it = f_Bars_BarDestroy(it);
+				}
+				else
+				{++it;}
+			}
+		}
+
+		if (g_HUDBArsArrayV.size() == 0)
+		{
+			g_HudBarsArraySize = 0;
+		}
+}
 
 
 
@@ -143,13 +209,17 @@ int f_Bars_BarSetBarValue(int iKey, float fBarVarValue)
 		break;
 
 	case k_HBMeterTypeAlpha:
-		fBarVarValue *= HudBarIterElement.fAlphaDifference;
-		fBarVarValue += HudBarIterElement.fAlphaMin;
-		HudBarIterElement.TileMeter->SetFloat(kTileValue_alpha, fBarVarValue);
+		if (HudBarIterElement.iHidden == 0)
+		{
+			fBarVarValue *= HudBarIterElement.fAlphaDifference;
+			fBarVarValue += HudBarIterElement.fAlphaMin;
+			HudBarIterElement.TileMeter->SetFloat(kTileValue_alpha, fBarVarValue);
+		}
+
 		break;
 	case k_HBMeterTypeText:
-		_MESSAGE("Setting k_HBMeterTypeText");
-		Console_Print("HudBarIterElement.MaxValue is %f ", HudBarIterElement.MaxValue);
+		//_MESSAGE("Setting k_HBMeterTypeText");
+		//Console_Print("HudBarIterElement.MaxValue is %f ", HudBarIterElement.MaxValue);
 
 		if (HudBarIterElement.iShowMaxValue == 1)
 		{sprintf(TempText, "%s%.0f/%.0f%s", HudBarIterElement.Prefix, fBarVarValue, HudBarIterElement.MaxValue, HudBarIterElement.PostFix);}
@@ -158,7 +228,7 @@ int f_Bars_BarSetBarValue(int iKey, float fBarVarValue)
 		HudBarIterElement.TileText->SetString(kTileValue_string, TempText);
 		break;
 	case k_HBMeterTypeTextPercentage:
-		_MESSAGE("Setting k_HBMeterTypeTextPercentage");
+		//_MESSAGE("Setting k_HBMeterTypeTextPercentage");
 		int iToShow = fBarVarValue * 100;
 		sprintf(TempText, "%s%d%s", HudBarIterElement.Prefix, iToShow, HudBarIterElement.PostFix);
 		HudBarIterElement.TileText->SetString(kTileValue_string, TempText);
@@ -172,87 +242,287 @@ int f_Bars_BarSetBarValue(int iKey, float fBarVarValue)
 
 
 
+plf::nanotimer g_timer;
+float g_TimeElapsed = 0;
+float g_TimerEvalHBVars = 0;
+int	  g_EvalHBVarsTime = 0;
+int	  g_TimerStarted = 0;
 
 void f_Bars_Iterate()
 {
+	_MESSAGE("Script execution START");
+	plf::nanotimer perf_timer;
+	perf_timer.start();
+
+	float elapsedTime = g_timer.get_elapsed_ms() - g_TimeElapsed;
+	g_TimeElapsed = g_timer.get_elapsed_ms();
+	//Console_Print("Elapsed ms::%f", elapsedTime);
+	//Console_Print("g_TimeElapsed ms::%f", g_TimeElapsed);
+	//Console_Print("g_timer.get_elapsed_ms() ms::%f", g_timer.get_elapsed_ms());
+
+
+	
+
 	ScriptVar* ScriptVariable = nullptr;
 	float fMaxValue = 0, fWidth = 0;
 	Tile* TileMeter;
 	float fBarVarValue = 0;
 	int iMeterType = 0, iValueType  = 0;
-	for (int iKey = 0; iKey < g_HudBarsArraySize; iKey++) {
-		Console_Print("Current Bar is %s, iKey is %d", HudBarIterElement.Name, iKey);
+	int iHide = 0;
 
-		if (HudBarIterElement.iBarVisible) {}
+
+	//for (HUDBarElement& it2 : g_HUDBArsArrayV) {
+	//	it2.
+	//}
+
+	//for (HUDBarElement& it2 : g_HUDBArsArrayV) {
+	//iSkipFrame += 1;
+	//if (iSkipFrame > 6)
+	//	iSkipFrame = 0;
+
+	//g_TimeEvalVars
+
+	if (g_TimerEvalHBVars < 0)
+	{
+		g_TimerEvalHBVars = 0.1;
+		g_EvalHBVarsTime = 1;
+	}
+	else {
+		g_TimerEvalHBVars -= elapsedTime;
+	}
+
+
+
+
+	for (std::vector<HUDBarElement>::iterator it = g_HUDBArsArrayV.begin(); it != g_HUDBArsArrayV.end(); ++it)
+	{
+		//Console_Print("Current Bar  is %s ", HudBarIterElementV.Name);
+		//Console_Print("Current Bar vis is %d ", HudBarIterElementV.iBarVisible);
+
+		if (HudBarIterElementV.iBarVisible) {}
 		else { continue; }
 
-		if (HudBarIterElement.iMenuTypeShow)
+		iHide = 0;
+
+		_MESSAGE("Current Bar VISIBLE is %s ", HudBarIterElementV.Name);
+
+		if (g_EvalHBVarsTime == 1)
 		{
-			//Console_Print("iMenuTypeShow is %d, currentMode is %d", HudBarIterElement.iMenuTypeShow, g_interfaceManager->currentMode);
-			if (HudBarIterElement.iMenuTypeShow == g_interfaceManager->currentMode)
+			if (HudBarIterElementV.iMenuTypeShow && HudBarIterElementV.iMenuTypeShow != g_interfaceManager->currentMode)
 			{
-				if (HudBarIterElement.iReasonHidden != 0)
+				iHide = 1;
+			}
+
+			if (HudBarIterElementV.iDisableControlMovement)
+			{
+				if (g_ThePlayer->pcControlFlags & (1 << 0))
 				{
-					HudBarIterElement.iReasonHidden = 0;
-					HudBarIterElement.TileRect->SetFloat(kTileValue_visible, 1);
+					iHide = 1;
 				}
 			}
-			else
+
+			if (HudBarIterElementV.iDisableWhenCombat)
 			{
-				if (HudBarIterElement.iReasonHidden == 0)
+				if (HudBarIterElementV.iDisableWhenCombat == 1)
 				{
-					HudBarIterElement.iReasonHidden = 1;
-					HudBarIterElement.TileRect->SetFloat(kTileValue_visible, 0);
+					if (g_ThePlayer->pcInCombat)
+					{
+						iHide = 1;
+					}
+				}
+				else {
+
+					if (g_ThePlayer->pcInCombat == 0)
+					{
+						iHide = 1;
+					}
+
+
+				}
+
+
+			}
+
+			if (HudBarIterElementV.iDisableWhenSneaking)
+			{
+				if (HudBarIterElementV.iDisableWhenSneaking == 1)
+				{
+					if ((g_ThePlayer->GetMovementFlags() & 0xC00) == 0x400) // From JiP
+					{
+						iHide = 1;
+					}
+				}
+				else {
+					if ((g_ThePlayer->GetMovementFlags() & 0xC00) != 0x400) 
+					{
+						iHide = 1;
+					}
+				}
+
+
+			}
+
+			if (HudBarIterElementV.iDisableWhenAiming)
+			{
+				if (HudBarIterElementV.iDisableWhenAiming == 1)
+				{
+					if (g_HUDMainMenu->isUsingScope || g_ThePlayer->ironSightNode && g_ThePlayer->baseProcess->IsWeaponOut())
+					{
+						iHide = 1;
+					}
+
+				}
+				else {
+					if (g_HUDMainMenu->isUsingScope == 0 && (g_ThePlayer->ironSightNode && g_ThePlayer->baseProcess->IsWeaponOut()) == 0)
+					{
+						iHide = 1;
+					}
+
+
+				}
+
+			}
+
+			if (iHide)
+			{
+				if (HudBarIterElementV.iHidden)
+				{}
+				else {
+					//_MESSAGE("HIDING BAR:: %s ", HudBarIterElementV.Name);
+					HudBarIterElementV.iHidden = 1;
+					ThisCall(0xA07DC0, HudBarIterElementV.TileFrame, kTileValue_alpha);
+					ThisCall(0xA07DC0, HudBarIterElementV.TileText, kTileValue_alpha);
+					ThisCall(0xA07DC0, HudBarIterElementV.TileMeter, kTileValue_alpha);
+					ThisCall(0xA07DC0, HudBarIterElementV.TileImageEx, kTileValue_alpha);
+
+					if (HudBarIterElementV.iGradualVanishingMovement)
+					{
+						switch (HudBarIterElementV.iGradualVanishingMovement) {
+							case 1:
+								ThisCall(0xA07DC0, HudBarIterElementV.TileMeter, kTileValue_x);
+								HudBarIterElementV.TileRect->GradualSetFloat(kTileValue_x, HudBarIterElementV.fRectPosX, HudBarIterElementV.fRectPosX + HudBarIterElementV.fGradualVanishingPosShift, HudBarIterElementV.fGradualVanishingTimer, 0);
+								break;
+							case 2:
+								ThisCall(0xA07DC0, HudBarIterElementV.TileMeter, kTileValue_y);
+								HudBarIterElementV.TileRect->GradualSetFloat(kTileValue_y, HudBarIterElementV.fRectPosY, HudBarIterElementV.fRectPosY + HudBarIterElementV.fGradualVanishingPosShift, HudBarIterElementV.fGradualVanishingTimer, 0);
+								break;
+						}
+					}
+
+					if (HudBarIterElementV.iGradualVanishing)
+					{
+						HudBarIterElementV.TileFrame->GradualSetFloat(kTileValue_alpha, 255, 0, HudBarIterElementV.fGradualVanishingTimer, 0);
+						HudBarIterElementV.TileText->GradualSetFloat(kTileValue_alpha, 255, 0, HudBarIterElementV.fGradualVanishingTimer, 0);
+						HudBarIterElementV.TileMeter->GradualSetFloat(kTileValue_alpha, 255, 0, HudBarIterElementV.fGradualVanishingTimer, 0);
+						HudBarIterElementV.TileImageEx->GradualSetFloat(kTileValue_alpha, 255, 0, HudBarIterElementV.fGradualVanishingTimer, 0);
+					}
+					else {
+						HudBarIterElementV.TileFrame->SetFloat(kTileValue_alpha, 0);
+						HudBarIterElementV.TileText->SetFloat(kTileValue_alpha, 0);
+						HudBarIterElementV.TileMeter->SetFloat(kTileValue_alpha, 0);
+						HudBarIterElementV.TileImageEx->SetFloat(kTileValue_alpha, 0);
+					}
+
+				}
+				continue;
+			}
+			else {
+				if (HudBarIterElementV.iHidden)
+				{
+					//_MESSAGE("SHOWING BAR:: %s ", HudBarIterElementV.Name);
+
+					HudBarIterElementV.iHidden = 0;
+
+
+					if (HudBarIterElementV.iGradualAppearingMovement)
+					{
+						switch (HudBarIterElementV.iGradualAppearingMovement) {
+						case 1:
+							ThisCall(0xA07DC0, HudBarIterElementV.TileMeter, kTileValue_x);
+							HudBarIterElementV.TileRect->GradualSetFloat(kTileValue_x, HudBarIterElementV.fRectPosX + HudBarIterElementV.fGradualAppearingPosShift, HudBarIterElementV.fRectPosX, HudBarIterElementV.fGradualAppearingTimer, 0);
+							break;
+						case 2:
+							ThisCall(0xA07DC0, HudBarIterElementV.TileMeter, kTileValue_y);
+							HudBarIterElementV.TileRect->GradualSetFloat(kTileValue_y, HudBarIterElementV.fRectPosY + HudBarIterElementV.fGradualAppearingPosShift, HudBarIterElementV.fRectPosY, HudBarIterElementV.fGradualAppearingTimer, 0);
+							break;
+						}
+					}
+
+
+
+
+
+					ThisCall(0xA07DC0, HudBarIterElementV.TileFrame, kTileValue_alpha);
+					ThisCall(0xA07DC0, HudBarIterElementV.TileText, kTileValue_alpha);
+					ThisCall(0xA07DC0, HudBarIterElementV.TileMeter, kTileValue_alpha);
+					ThisCall(0xA07DC0, HudBarIterElementV.TileImageEx, kTileValue_alpha);
+
+					if (HudBarIterElementV.iGradualAppearing)
+					{
+						HudBarIterElementV.TileFrame->GradualSetFloat(kTileValue_alpha, 0, 255, HudBarIterElementV.fGradualAppearingTimer, 0);
+						HudBarIterElementV.TileText->GradualSetFloat(kTileValue_alpha, 0, 255, HudBarIterElementV.fGradualAppearingTimer, 0);
+						HudBarIterElementV.TileMeter->GradualSetFloat(kTileValue_alpha, 0, 255, HudBarIterElementV.fGradualAppearingTimer, 0);
+						HudBarIterElementV.TileImageEx->GradualSetFloat(kTileValue_alpha, 0, 255, HudBarIterElementV.fGradualAppearingTimer, 0);
+					}
+					else {
+						HudBarIterElementV.TileFrame->SetFloat(kTileValue_alpha, 0);
+						HudBarIterElementV.TileText->SetFloat(kTileValue_alpha, 0);
+						HudBarIterElementV.TileMeter->SetFloat(kTileValue_alpha, 0);
+						HudBarIterElementV.TileImageEx->SetFloat(kTileValue_alpha, 0);
+					}
 				}
 			}
+
+		}
+
+
+		if (HudBarIterElementV.ValueType > k_HBValueTypeNoScriptVar) {}
+		else { continue; }
+
+		if (HudBarIterElementV.fCurTimer < 0)
+		{
+			HudBarIterElementV.fCurTimer = HudBarIterElementV.fUpdateTimer;
+			_MESSAGE("SETTING VAL");
 		}
 		else {
-			if (HudBarIterElement.iReasonHidden == 1)
-			{
-				HudBarIterElement.iReasonHidden = 0;HudBarIterElement.TileRect->SetFloat(kTileValue_visible, 1);
-			}
+			HudBarIterElementV.fCurTimer -= elapsedTime;
+			_MESSAGE("CONTINUING WITHOUT SETTING VAL");
+			continue;
 		}
-
-
-
-		if (HudBarIterElement.ValueType >= k_HBValueTypeScriptVar) {}
-		else { continue; }
-
 		
 
-		if (HudBarIterElement.ValueType == k_HBValueTypeScriptVar)
+		if (HudBarIterElementV.ValueType == k_HBValueTypeScriptVar)
 		{
-			ScriptVariable = HudBarIterElement.ScriptVariable;
+			ScriptVariable = HudBarIterElementV.ScriptVariable;
 			fBarVarValue = ScriptVariable->data.num;
-			if (HudBarIterElement.iScriptValueCalculateMax)
+			if (HudBarIterElementV.iScriptValueCalculateMax)
 			{
-				fMaxValue = HudBarIterElement.MaxValue;
-				fBarVarValue = ScriptVariable->data.num;
+				fMaxValue = HudBarIterElementV.MaxValue;
 				fBarVarValue = fBarVarValue / fMaxValue;
 				if (fBarVarValue > 1)
 					fBarVarValue = 1;
 				else if (fBarVarValue < 0)
 					fBarVarValue = 0;
 			}
-		}else if (HudBarIterElement.ValueType == k_HBValueTypeScriptFunction)
+		}else if (HudBarIterElementV.ValueType == k_HBValueTypeScriptFunction)
 		{
 			NVSEArrayElement element;
 			element.num = std::numeric_limits<float>::quiet_NaN();
 
-			if (HudBarIterElement.FunctionToCall)
+			if (HudBarIterElementV.FunctionToCall)
 			{
-				if (HudBarIterElement.FunctionCaller)
+				if (HudBarIterElementV.FunctionCaller)
 				{
-					FunctionCallScript(HudBarIterElement.FunctionToCall, HudBarIterElement.FunctionCaller, NULL, &element, NULL);
+					FunctionCallScript(HudBarIterElementV.FunctionToCall, HudBarIterElementV.FunctionCaller, NULL, &element, NULL);
 				}
 				else {
-					FunctionCallScript(HudBarIterElement.FunctionToCall, NULL, NULL, &element, NULL);
+					FunctionCallScript(HudBarIterElementV.FunctionToCall, NULL, NULL, &element, NULL);
 				}
 
 				if (element.num != std::numeric_limits<float>::quiet_NaN())
 				{
 					fBarVarValue = element.num;
-					if (HudBarIterElement.iScriptValueCalculateMax)
+					if (HudBarIterElementV.iScriptValueCalculateMax)
 					{
 						fBarVarValue = fBarVarValue / fMaxValue;
 						if (fBarVarValue > 1)
@@ -265,7 +535,7 @@ void f_Bars_Iterate()
 	
 				}else{
 					fBarVarValue = 0;
-					_MESSAGE("Function result is not valid for bar->>%s", HudBarIterElement.Name);
+					_MESSAGE("Function result is not valid for bar->>%s", HudBarIterElementV.Name);
 				}
 
 
@@ -277,12 +547,16 @@ void f_Bars_Iterate()
 
 		}
 
+		//_MESSAGE("NAME for scriptVAR-->> %s", HudBarIterElementV.Name);
 
-		_MESSAGE("NAME for scriptVAR-->> %s", HudBarIterElement.Name);
-		f_Bars_BarSetBarValue(iKey,fBarVarValue);
+		f_Bars_BarSetBarValue(it - g_HUDBArsArrayV.begin(),fBarVarValue);
 
 	}
 
+	g_EvalHBVarsTime = 0;
+
+
+	_MESSAGE("Script execution END ms::%f", perf_timer.get_elapsed_ms());
 }
 
 

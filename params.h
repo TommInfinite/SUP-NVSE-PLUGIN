@@ -445,8 +445,16 @@ static ParamInfo kParams_Tomm_HudBarSetTraitInt[3] =
 {
 	{"String", kParamType_String, 0},
 	{ "int", kParamType_Integer, 0 },
+	{ "float", kParamType_Float, 0 },
+};
+
+static ParamInfo kParams_Tomm_HudBarSetSystemColor[3] =
+{
+	{"String", kParamType_String, 0},
+	{ "int", kParamType_Integer, 0 },
 	{ "int", kParamType_Integer, 0 },
 };
+
 
 
 
@@ -512,9 +520,11 @@ static ParamInfo kParams_Tomm_HudBarSetFloat[2] =
 };
 
 
-static ParamInfo kParams_Tomm_CallFunctionNextFrame[1] =
+static ParamInfo kParams_Tomm_CallFunctionNextFrame[3] =
 {
 	{"Form", kParamType_AnyForm, 0},
+	{ "int", kParamType_Integer, 1 },
+	{ "int", kParamType_Integer, 1 },
 };
 
 
@@ -526,6 +536,25 @@ static ParamInfo kParams_Tomm_HudBarSetValueUDF[4] =
 	{"Object Ref", kParamType_ObjectRef, 1}
 
 };
+
+
+
+static ParamInfo kParams_Tomm_HudBarGetInt[2] =
+{
+	{"String", kParamType_String, 0},
+	{ "int", kParamType_Integer, 0 },
+};
+
+
+static ParamInfo kParams_Tomm_HudBarSetColor[5] =
+{
+	{"String", kParamType_String, 0},
+	{ "int", kParamType_Integer, 0 },
+	{ "float", kParamType_Float, 0 },
+	{ "float", kParamType_Float, 0 },
+	{ "float", kParamType_Float, 0 },
+};
+
 
 
 

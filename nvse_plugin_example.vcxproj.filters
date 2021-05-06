@@ -140,9 +140,6 @@
     <ClInclude Include="Tomm_fn_Misc.h">
       <Filter>functions</Filter>
     </ClInclude>
-    <ClInclude Include="Tomm_JiP_FileStream.h">
-      <Filter>functions</Filter>
-    </ClInclude>
     <ClInclude Include="Tomm_fn_TFC.h">
       <Filter>functions</Filter>
     </ClInclude>
@@ -161,11 +158,20 @@
     <ClInclude Include="Tomm_fn_Utility.h">
       <Filter>functions</Filter>
     </ClInclude>
-    <ClInclude Include="Tomm_HUDBars.h">
-      <Filter>functions</Filter>
-    </ClInclude>
     <ClInclude Include="Tomm_fn_HudBars.h">
       <Filter>functions</Filter>
+    </ClInclude>
+    <ClInclude Include="Tomm_HUDBars.h">
+      <Filter>local</Filter>
+    </ClInclude>
+    <ClInclude Include="Tomm_FunctionCaller.h">
+      <Filter>local</Filter>
+    </ClInclude>
+    <ClInclude Include="Tomm_JiP_FileStream.h">
+      <Filter>local</Filter>
+    </ClInclude>
+    <ClInclude Include="NanoTimer.h">
+      <Filter>local</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

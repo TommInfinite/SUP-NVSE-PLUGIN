@@ -19,7 +19,7 @@ DEFINE_COMMAND_PLUGIN(FindClosestActorFromRef, "", 1, 3, kParams_Tomm_TwoIntsOpt
 DEFINE_COMMAND_PLUGIN(FindClosestActor, "", 0, 6, kParams_Tomm_FindClosestActor)
 DEFINE_COMMAND_PLUGIN(FindRandomActorFromRef, "", 1, 3, kParams_Tomm_TwoIntsOptional_OneFloatOptional)
 DEFINE_COMMAND_PLUGIN(FindRandomActor, "", 0, 6, kParams_Tomm_FindClosestActor)
-DEFINE_COMMAND_PLUGIN(CallFunctionNextFrame, "", 0, 1, kParams_Tomm_CallFunctionNextFrame)
+DEFINE_COMMAND_PLUGIN(CallFunctionNextFrame, "", 0, 3, kParams_Tomm_CallFunctionNextFrame)
 
 
 
@@ -779,11 +779,46 @@ bool Cmd_CallFunctionNextFrame_Execute(COMMAND_ARGS)
 {
 	Script* script = NULL;
 	NVSEArrayElement element;
+	int iFramesRemain = 1;
+	int iRemoveOnGameLoad = 1;
 
-	if (!ExtractArgsEx(EXTRACT_ARGS_EX, &script )) return true; // From JIP
-	g_script->CallFunction(script, thisObj, NULL, &element, NULL);
+	if (!ExtractArgsEx(EXTRACT_ARGS_EX, &script, &iFramesRemain, &iRemoveOnGameLoad)) return true; // From JIP
 
-	//Console_Print("RESULT is--> %f", element->num);
+	FunctionCaller NewFunctionCaller;
+
+	if (g_FuncCallerArrayID > (INT_MAX - 5)) //Being paranoid hurts
+		g_FuncCallerArrayID = 0;
+
+
+
+	NewFunctionCaller.iID = g_FuncCallerArrayID;
+	g_FuncCallerArrayID += 1;
+
+	NewFunctionCaller.FunctionToCall = script;
+	NewFunctionCaller.iRemoveOnGameLoad = iRemoveOnGameLoad;
+
+	
+
+	if (thisObj)
+	{
+		NewFunctionCaller.FunctionCallerRef = thisObj;
+	}
+
+	if (NUM_ARGS > 1)
+	{
+		if (iFramesRemain < 1)
+		{
+			iFramesRemain = 1;
+		}
+		NewFunctionCaller.iFramesRemain = iFramesRemain;
+	}
+	g_FuncCallerArrayV.push_back(NewFunctionCaller);
+
+	g_FuncCallerArraySize += 1;
+
+	_MESSAGE("SUP::Adding new function to call, ID::%d , Frames::%d", g_FuncCallerArrayID, iFramesRemain);
+
+	*result = 1;
 	return true;
 }
 
@@ -791,6 +826,7 @@ bool Cmd_CallFunctionNextFrame_Execute(COMMAND_ARGS)
 bool Cmd_SUPTest_Execute(COMMAND_ARGS)
 {
 	//STD_STRING_TEST();
+	f_FuncCaller_Iterate();
 
 	return true;
 }

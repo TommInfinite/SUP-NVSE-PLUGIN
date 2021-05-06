@@ -28,7 +28,9 @@
 #include <iostream>
 #include <nvse/nvse/GameData.h>
 
-
+#include <vector>
+#include <memory>
+#include <NanoTimer.h>
 
 
 
@@ -81,14 +83,15 @@ FontManagerJIP* g_fontManager = NULL; // FROM JIP
 //VATSCameraData* g_VATSCameraData = (VATSCameraData*)0x11F2250; // From JIP
 VATSMenu** g_VATSMenu = (VATSMenu**)0x11DB0D4;
 ProcessManager* g_processManager = (ProcessManager*)0x11E0E80; // From JiP
-UInt32 SUPNVSEVersion = 140;
+UInt32 SUPNVSEVersion = 144;
 #define NUM_ARGS *((UInt8*)scriptData + *opcodeOffsetPtr)
 #define REFR_RES *(UInt32*)result // From JIP
 #define IS_ACTOR(form) ((*(UInt32**)form)[0x40] == 0x8D0360) // From JIP
 #define GetRandomIntInRange(iMin, iMax) ThisCall<SInt32, SInt32>(0xAA5230, (void*)0x11C4180, iMax - iMin) + iMin // From JIP
 
-#define HudBarIterElement g_HUDBArsArray[iKey]
-
+#define HudBarIterElement g_HUDBArsArrayV[iKey]
+#define HudBarIterElementV (*it)
+#define VectorIter (*it)
 
 
 //bool b_MouseInput = true;
@@ -114,7 +117,7 @@ typedef NVSEArrayVarInterface::Element NVSEArrayElement;
 
 bool (*FunctionCallScript)(Script* funcScript, TESObjectREFR* callingObj, TESObjectREFR* container, NVSEArrayElement* result, UInt8 numArgs, ...);
 #include <Tomm_HUDBars.h>
-
+#include "Tomm_FunctionCaller.h"
 
 Tile* InterfaceManager::GetActiveTile() //proably from JiP
 {
@@ -260,16 +263,16 @@ void GetFalloutDirectorySUP(void)
 			{
 				s_falloutDirectory = falloutPath.substr(0, lastSlash + 1);
 
-				_DMESSAGE("fallout root = %s", s_falloutDirectory.c_str());
+				_MESSAGE("fallout root = %s", s_falloutDirectory.c_str());
 			}
 			else
 			{
-				_WARNING("no slash in fallout path? (%s)", falloutPath.c_str());
+				_MESSAGE("no slash in fallout path? (%s)", falloutPath.c_str());
 			}
 		}
 		else
 		{
-			_WARNING("couldn't find fallout path (len = %d, err = %08X)", falloutPathLength, GetLastError());
+			_MESSAGE("couldn't find fallout path (len = %d, err = %08X)", falloutPathLength, GetLastError());
 		}
 	}
 
@@ -295,9 +298,6 @@ void GetFalloutDirectorySUP(void)
 //}
 
 //CallXAndGetHWND();
-
-
-
 
 
 
@@ -342,6 +342,10 @@ void MessageHandler(NVSEMessagingInterface::Message* msg)
 
 		break;
 	case NVSEMessagingInterface::kMessage_PreLoadGame:
+
+		f_FuncCaller_RemoveOnGameLoad();
+		f_Bars_BarRemoveOnGameLoad();
+
 
 		s_gameLoadedInformedScriptsSUP.Clear();
 		// Credits to C6 for the help.
@@ -418,7 +422,6 @@ void MessageHandler(NVSEMessagingInterface::Message* msg)
 		KillActor = GetCmdByOpcode(0x108B)->execute;
 		g_fontManager = *(FontManagerJIP**)0x11F33F8; // From JIP
 		g_dataHandler = DataHandler::Get();
-		
 		//WriteRelJump(0xA23252, 0xA23296);
 
 
@@ -430,7 +433,13 @@ void MessageHandler(NVSEMessagingInterface::Message* msg)
 
 	case NVSEMessagingInterface::kMessage_MainGameLoop:
 		if (g_HudBarsArraySize)
-		{f_Bars_Iterate();}
+			f_Bars_Iterate();
+
+
+		if (g_FuncCallerArraySize)
+			f_FuncCaller_Iterate();
+
+
 		break;
 
 	case NVSEMessagingInterface::kMessage_RuntimeScriptError:
@@ -451,6 +460,8 @@ void MessageHandler(NVSEMessagingInterface::Message* msg)
 #include "Tomm_fn_Array.h"
 #include "Tomm_fn_Math.h"
 #include "Tomm_fn_HudBars.h"
+
+
 
 
 
@@ -639,10 +650,10 @@ bool NVSEPlugin_Load(const NVSEInterface* nvse)
 	/*62*/RegisterScriptCommand(Ar_GetRandomKey);
 	/*63*/REG_CMD_STR(Ar_GetRandomKeyMap);
 	/*64*/RegisterScriptCommand(Ar_HasInvalidRefs);
-	//  v.1.50
+	//  v.2.00
 	/*65*/RegisterScriptCommand(GetUIValueType); /////////////TEST TEST TEST
 	/*66*/RegisterScriptCommand(IsProgramRunning); 
-	/*67*/REG_CMD_ARR(GetFileTime);
+	/*67*/REG_CMD_ARR(GetFileTime,Array);
 	/*68*/REG_CMD_STR(GetFileTimeSTR);
 	/*69*/RegisterScriptCommand(StringToClipboard);
 	/*70*/REG_CMD_STR(ClipboardToString);
@@ -669,9 +680,18 @@ bool NVSEPlugin_Load(const NVSEInterface* nvse)
 	/*91*/RegisterScriptCommand(HudBarSetBarTrait);
 	/*92*/RegisterScriptCommand(HudBarSetMeterTrait);
 	/*92*/RegisterScriptCommand(CallFunctionNextFrame);
-	/*82*/RegisterScriptCommand(HudBarSetValueUDF);
-	/*82*/RegisterScriptCommand(HudBarShowBar);
-	///*66*/RegisterScriptCommand(SetTileValueAction);
+	/*93*/RegisterScriptCommand(HudBarSetValueUDF);
+	/*94*/RegisterScriptCommand(HudBarShowBar);
+	/*95*/REG_CMD_ARR(HudBarGetAllBars, Array);
+	/*96*/REG_CMD_STR(HudBarGetElementUIPath);
+	/*97*/RegisterScriptCommand(HudBarSetAlpha);
+	/*98*/RegisterScriptCommand(HudBarRemoveAllBars);
+	/*99*/RegisterScriptCommand(HudBarSetColor);
+	/*100*/RegisterScriptCommand(HudBarSetSystemColor);
+	/*91*/RegisterScriptCommand(HudBarSetFontTrait);
+	/*90*/RegisterScriptCommand(HudBarSetSizeAlt);
+	/*97*/RegisterScriptCommand(HudBarSetDepth);
+	/*97*/RegisterScriptCommand(HudBarSetZoom);
 
 	//*61*/RegisterScriptCommand(UIUpdateField);
 	//*20*/REG_CMD_ARR(SupTestArray, Array);

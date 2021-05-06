@@ -362,6 +362,8 @@
     <ClInclude Include="..\nvse\nvse\Utilities.h" />
     <ClInclude Include="..\nvse\nvse\utility.h" />
     <ClInclude Include="decoding.h" />
+    <ClInclude Include="NanoTimer.h" />
+    <ClInclude Include="Tomm_FunctionCaller.h" />
     <ClInclude Include="Tomm_fn_HudBars.h" />
     <ClInclude Include="Tomm_HUDBars.h" />
     <ClInclude Include="Tomm_fn_Utility.h" />
