@@ -9,7 +9,7 @@ DEFINE_COMMAND_PLUGIN(MarkScriptOnLoad, "", 0, 0, NULL)
 DEFINE_COMMAND_PLUGIN(IsScriptMarkedOnLoad, "", 0, 1, kParams_Tomm_OneForm)
 DEFINE_COMMAND_PLUGIN(GetNearCells, "", 0, 1, kParams_Tomm_OneInt)
 DEFINE_COMMAND_PLUGIN(GetNearMapMarkers, "", 0, 1, kParams_Tomm_OneInt)
-DEFINE_COMMAND_PLUGIN(SUPTest, "", 0, 0, NULL)
+DEFINE_COMMAND_PLUGIN(SUPTest, "", 0, 0, 0)
 DEFINE_COMMAND_PLUGIN(GetGrenadeTimeHeld, "", 0, 0, NULL)
 DEFINE_CMD_ALT_COND_PLUGIN(IsPlayerOverencumbered, , , 0, 0, NULL);	
 DEFINE_COMMAND_PLUGIN(SetCaughtPCPickpocketting, "", 1, 1, kParams_Tomm_OneIntOptional)
@@ -20,6 +20,9 @@ DEFINE_COMMAND_PLUGIN(FindClosestActor, "", 0, 6, kParams_Tomm_FindClosestActor)
 DEFINE_COMMAND_PLUGIN(FindRandomActorFromRef, "", 1, 3, kParams_Tomm_TwoIntsOptional_OneFloatOptional)
 DEFINE_COMMAND_PLUGIN(FindRandomActor, "", 0, 6, kParams_Tomm_FindClosestActor)
 DEFINE_COMMAND_PLUGIN(CallFunctionNextFrame, "", 0, 3, kParams_Tomm_CallFunctionNextFrame)
+DEFINE_COMMAND_ALT_PLUGIN(DumpLoadOrder, DumpLO, "", 0, 0, NULL)
+DEFINE_COMMAND_PLUGIN(GetModTraitSTR, "", 0, 2, kParams_Tomm_TwoInts)
+
 
 
 
@@ -807,16 +810,17 @@ bool Cmd_CallFunctionNextFrame_Execute(COMMAND_ARGS)
 	if (NUM_ARGS > 1)
 	{
 		if (iFramesRemain < 1)
-		{
-			iFramesRemain = 1;
-		}
+		{iFramesRemain = 1;}
+		else if (iFramesRemain > 1000)
+		{iFramesRemain = 1000;}
+
 		NewFunctionCaller.iFramesRemain = iFramesRemain;
 	}
 	g_FuncCallerArrayV.push_back(NewFunctionCaller);
 
-	g_FuncCallerArraySize += 1;
+	g_FuncCallerArrayIterate = 1;
 
-	_MESSAGE("SUP::Adding new function to call, ID::%d , Frames::%d", g_FuncCallerArrayID, iFramesRemain);
+	//_MESSAGE("SUP::Adding new function to call, ID::%d , Frames::%d", g_FuncCallerArrayID, iFramesRemain);
 
 	*result = 1;
 	return true;
@@ -825,14 +829,95 @@ bool Cmd_CallFunctionNextFrame_Execute(COMMAND_ARGS)
 
 bool Cmd_SUPTest_Execute(COMMAND_ARGS)
 {
-	//STD_STRING_TEST();
-	f_FuncCaller_Iterate();
+
+
+	return true;
+}
+
+template <typename I> std::string n2hexstr(I w, size_t hex_len = sizeof(I) << 1) {
+	static const char* digits = "0123456789ABCDEF";
+	std::string rc(hex_len, '0');
+	for (size_t i = 0, j = (hex_len - 1) * 4; i < hex_len; ++i, j -= 4)
+		rc[i] = digits[(w >> j) & 0x0f];
+	return rc;
+}
+
+
+
+void f_Misc_DumpLoadOrder()
+{
+	int iKey = 0;
+	int iModCount = 0;
+	std::string s_temp{};
+
+	size_t iHexLenght = 0;
+
+	const ModInfo** activeModList = g_dataHandler->GetActiveModList();
+	iModCount = g_dataHandler->GetActiveModCount();
+
+	_MESSAGE("---Load order---");
+
+		while (iKey < iModCount) {
+
+			s_temp = n2hexstr(iKey, 2);
+			_MESSAGE("%s (%d):%s", s_temp.c_str(), iKey, activeModList[iKey]->name);
+			iKey++;
+		}
+
+	_MESSAGE("---Load order end---");
+
+
+	//activeModList[modIndex]->name;
+
+}
+
+bool Cmd_DumpLoadOrder_Execute(COMMAND_ARGS)
+{
+	f_Misc_DumpLoadOrder();
 
 	return true;
 }
 
 
 
+const char* f_Misc_GetModTraitSTR(UInt32 modIndex, int iRequest)
+{
+
+	char TempChar[0x4000]{};
+
+	if (modIndex >= 255 || modIndex < 0)
+		return "";
+
+	const ModInfo** activeModList = g_dataHandler->GetActiveModList();
+	if (modIndex < g_dataHandler->GetActiveModCount() && activeModList[modIndex])
+		switch (iRequest) {
+		case 0:
+			sprintf(TempChar, "%s", activeModList[modIndex]->author);
+			return TempChar;
+			break;
+		case 1:
+			sprintf(TempChar, "%s", activeModList[modIndex]->description);
+			return TempChar;
+			break;
+		}
+
+
+	else
+		return "";
+}
+
+
+bool Cmd_GetModTraitSTR_Execute(COMMAND_ARGS)
+{
+
+	int iModIndex = 0;
+	int iRequest = 0;
+
+	if (!ExtractArgsEx(EXTRACT_ARGS_EX, &iModIndex, &iRequest)) return true;
+
+	StrIfc->Assign(PASS_COMMAND_ARGS, f_Misc_GetModTraitSTR(iModIndex, iRequest));
+
+}
 
 //bool Cmd_SupTestArray_Execute(COMMAND_ARGS)
 //{

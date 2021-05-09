@@ -215,7 +215,11 @@ ParamInfo kParams_Tomm_OneString[1] =
 	{"String", kParamType_String, 0},
 };
 
-
+ParamInfo kParams_Tomm_OneString_OneOptionalInt[2] =
+{
+	{"String", kParamType_String, 0},
+	{"int", kParamType_Integer, 1 },
+};
 
 ParamInfo kParams_Tomm_OneString_OneInt[2] =
 {
@@ -440,6 +444,15 @@ static ParamInfo kParams_Tomm_HudBarSetFloatValueEx[3] =
 	{ "float", kParamType_Float, 0 },
 };
 
+static ParamInfo kParams_Tomm_HudBarSetTextTrait[4] =
+{
+	{"String", kParamType_String, 0},
+	{ "int", kParamType_Integer, 0 },
+	{ "int", kParamType_Integer, 0 },
+	{ "float", kParamType_Float, 0 },
+};
+
+
 
 static ParamInfo kParams_Tomm_HudBarSetTraitInt[3] =
 {
@@ -481,6 +494,16 @@ static ParamInfo kParams_Tomm_HudBarSetTwoFloatValuesEx[4] =
 	{ "float", kParamType_Float, 0 },
 };
 
+static ParamInfo kParams_Tomm_HudBarSetIntFloatEx[4] =
+{
+	{"String", kParamType_String, 0},
+	{ "int", kParamType_Integer, 0 },
+	{ "int", kParamType_Integer, 0 },
+	{ "float", kParamType_Float, 0 },
+};
+
+
+
 
 
 static ParamInfo kParams_Tomm_HudBarSetString[2] =
@@ -497,12 +520,28 @@ static ParamInfo kParams_Tomm_HudBarSetStringEx[3] =
 	{"String", kParamType_String, 0},
 };
 
+static ParamInfo kParams_Tomm_HudBarSetTexture[4] =
+{
+	{"String", kParamType_String, 0},
+	{ "int", kParamType_Integer, 0 },
+	{"String", kParamType_String, 0},
+	{ "int", kParamType_Integer, 1 },
+};
+
+
 
 
 static ParamInfo kParams_Tomm_HudBarSetInt[2] =
 {
 	{"String", kParamType_String, 0},
 	{ "int", kParamType_Integer, 0 },
+};
+
+static ParamInfo kParams_Tomm_HudBarGetBarTrait[3] =
+{
+	{"String", kParamType_String, 0},
+	{ "int", kParamType_Integer, 0 },
+	{ "int", kParamType_Integer, 1 },
 };
 
 static ParamInfo kParams_Tomm_HudBarSetIntEx[3] =
@@ -535,6 +574,18 @@ static ParamInfo kParams_Tomm_HudBarSetValueUDF[4] =
 	{ "int", kParamType_Integer, 1 },
 	{"Object Ref", kParamType_ObjectRef, 1}
 
+};
+
+static ParamInfo kParams_Tomm_HudBarSetItem[2] =
+{
+	{"String", kParamType_String, 0},
+	{	"item",		kParamType_ObjectID,	0	},
+};
+
+static ParamInfo kParams_Tomm_HudBarSetFormList[2] =
+{
+	{"String", kParamType_String, 0},
+	{"form list",kParamType_FormList,1},
 };
 
 

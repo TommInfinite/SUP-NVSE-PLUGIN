@@ -78,7 +78,10 @@ public:
 		float ImageExWidthAlt = 0;
 		float ImageExHeightAlt = 0;
 
-		float Indent = 0;
+		float IndentMeter = 0;
+		float IndentFrame = 0;
+		float IndentImageEx = 0;
+
 
 
 		//ValueTypeScript
@@ -108,7 +111,12 @@ public:
 		int iDisableWhenSneaking = 0;
 		int iDisableWhenCombat = 0;
 		int iDisableWhenAiming = 0;
-
+		int iDisableWhenWeaponOut = 0;
+		int iDisableWhenNotEquipped = 0;
+		int iHookedItemIsAList = 0;
+		TESForm* HookedItem = NULL;
+		BGSListForm* listForm = NULL;
+	
 
 		bool operator==(const HudBar& other) const
 		{
@@ -124,8 +132,8 @@ public:
 
 typedef HUDBarsInterface::HudBar HUDBarElement;
 
-int g_HudBarsArraySize = 0;
 
+int g_HudBarsIterate = 0;
 
 vector<HUDBarElement> g_HUDBArsArrayV;
 int g_HUDBArsArrayID = 0;
@@ -134,7 +142,7 @@ int g_HUDBArsArrayID = 0;
 
 void f_Bars_BarSetHidden(int iKey, int iRequest)
 {
-	HudBarIterElement.TileRect->SetFloat(kTileValue_visible, iRequest);
+	HBIter.TileRect->SetFloat(kTileValue_visible, iRequest);
 }
 
 
@@ -144,36 +152,42 @@ void f_Bars_BarSetHidden(int iKey, int iRequest)
 vector<HUDBarElement>::iterator f_Bars_BarDestroy(vector<HUDBarElement>::iterator it)
 {
 
-	_MESSAGE("Destroying bar named::->>%s, ID::%d", HudBarIterElementV.Name, HudBarIterElementV.ID);
+	_MESSAGE("Destroying bar named::->>%s, ID::%d", HBIterV.Name, HBIterV.ID);
 
-	HudBarIterElementV.TileRect->Destroy(true);
-	g_HudBarsArraySize -= 1;
+	HBIterV.TileRect->Destroy(true);
+
 	it = g_HUDBArsArrayV.erase(it);
+
+	if (g_HUDBArsArrayV.size() == 0)
+	{
+		g_HudBarsIterate = 0;
+	}
+
+
+
 	return it;
 }
 
 
 void f_Bars_BarRemoveOnGameLoad()
 {
-	if (g_HudBarsArraySize > 0)
-	{
 
 			vector<HUDBarElement>::iterator it;
 			for (it = g_HUDBArsArrayV.begin(); it != g_HUDBArsArrayV.end();)
 			{
 
-				if ( HudBarIterElementV.iRemoveOnGameLoad == 1)
+				if ( HBIterV.iRemoveOnGameLoad == 1)
 				{
 					it = f_Bars_BarDestroy(it);
 				}
 				else
 				{++it;}
 			}
-		}
+
 
 		if (g_HUDBArsArrayV.size() == 0)
 		{
-			g_HudBarsArraySize = 0;
+			g_HudBarsIterate = 0;
 		}
 }
 
@@ -192,28 +206,61 @@ int f_Bars_BarSetBarValue(int iKey, float fBarVarValue)
 	
 
 	char TempText[0x4000]{};
-	switch (HudBarIterElement.MeterType) {
+	switch (HBIter.MeterType) {
 	case k_HBMeterTypeHorizontal:
-		fBarVarValue *= HudBarIterElement.MeterWidthAlt;
-		fBarVarValue += HudBarIterElement.Indent;
 
-		//_MESSAGE("HudBarIterElement.MeterWidthAlt >>>>>%f", HudBarIterElement.MeterWidthAlt);
-		//_MESSAGE("HudBarIterElement.Indent >>>>>%f", HudBarIterElement.Indent);
-		//_MESSAGE("Setting width Value to>>>>>%f", fBarVarValue);
-		HudBarIterElement.TileMeter->SetFloat(kTileValue_width, fBarVarValue);
+		if (HBIter.TileMeter->GetValue(kTileValue_zoom)->num == -1)
+		{
+			float fAddPosX = HBIter.IndentMeter * (1 - fBarVarValue);
+			fBarVarValue *= HBIter.MeterWidth;
+			HBIter.TileMeter->SetFloat(kTileValue_width, fBarVarValue);
+			HBIter.TileMeter->SetFloat(kTileValue_x, fAddPosX);
+		}
+		else {
+			fBarVarValue *= HBIter.MeterWidthAlt;
+			fBarVarValue += HBIter.IndentMeter;
+			HBIter.TileMeter->SetFloat(kTileValue_width, fBarVarValue);
+		}
+
+
 		break;
 	case k_HBMeterTypeVertical:
-		fBarVarValue *= HudBarIterElement.MeterHeightAlt;
-		fBarVarValue += HudBarIterElement.Indent;
-		HudBarIterElement.TileMeter->SetFloat(kTileValue_height, fBarVarValue);
+
+		if (HBIter.TileMeter->GetValue(kTileValue_zoom)->num == -1)
+		{
+			float fAddPosY = HBIter.IndentMeter * (1 - fBarVarValue);
+			fBarVarValue *= HBIter.MeterHeight;
+			HBIter.TileMeter->SetFloat(kTileValue_height, fBarVarValue);
+			HBIter.TileMeter->SetFloat(kTileValue_y, fAddPosY);
+		}
+		else {
+			fBarVarValue *= HBIter.MeterHeightAlt;
+			fBarVarValue += HBIter.IndentMeter;
+			HBIter.TileMeter->SetFloat(kTileValue_height, fBarVarValue);
+		}
 		break;
 
 	case k_HBMeterTypeAlpha:
-		if (HudBarIterElement.iHidden == 0)
+		if (HBIter.iHidden == 0)
 		{
-			fBarVarValue *= HudBarIterElement.fAlphaDifference;
-			fBarVarValue += HudBarIterElement.fAlphaMin;
-			HudBarIterElement.TileMeter->SetFloat(kTileValue_alpha, fBarVarValue);
+			//Console_Print("fBarVarValue START is %f", fBarVarValue);
+
+			if (IsGradualSetFloat(HBIter.TileMeter, kTileValue_alpha) == 0)
+			{
+				fBarVarValue *= HBIter.fAlphaDifference;
+				fBarVarValue += HBIter.fAlphaMin;
+				HBIter.TileMeter->SetFloat(kTileValue_alpha, fBarVarValue);
+			}
+			else {
+				Console_Print("ALPHA GRADUAL SET FLOAT");
+
+			}
+
+
+			//Console_Print("HBIter.fAlphaDifference is %f", HBIter.fAlphaDifference);
+			//Console_Print("HBIter.fAlphaMax is %f", HBIter.fAlphaMax);
+			//Console_Print("HBIter.fAlphaMin is %f", HBIter.fAlphaMin);
+			//Console_Print("fBarVarValue END is %f", fBarVarValue);
 		}
 
 		break;
@@ -221,17 +268,17 @@ int f_Bars_BarSetBarValue(int iKey, float fBarVarValue)
 		//_MESSAGE("Setting k_HBMeterTypeText");
 		//Console_Print("HudBarIterElement.MaxValue is %f ", HudBarIterElement.MaxValue);
 
-		if (HudBarIterElement.iShowMaxValue == 1)
-		{sprintf(TempText, "%s%.0f/%.0f%s", HudBarIterElement.Prefix, fBarVarValue, HudBarIterElement.MaxValue, HudBarIterElement.PostFix);}
-		else{sprintf(TempText, "%s%.0f%s", HudBarIterElement.Prefix, fBarVarValue, HudBarIterElement.PostFix);}
+		if (HBIter.iShowMaxValue == 1)
+		{sprintf(TempText, "%s%.0f/%.0f%s", HBIter.Prefix, fBarVarValue, HBIter.MaxValue, HBIter.PostFix);}
+		else{sprintf(TempText, "%s%.0f%s", HBIter.Prefix, fBarVarValue, HBIter.PostFix);}
 
-		HudBarIterElement.TileText->SetString(kTileValue_string, TempText);
+		HBIter.TileText->SetString(kTileValue_string, TempText);
 		break;
 	case k_HBMeterTypeTextPercentage:
 		//_MESSAGE("Setting k_HBMeterTypeTextPercentage");
 		int iToShow = fBarVarValue * 100;
-		sprintf(TempText, "%s%d%s", HudBarIterElement.Prefix, iToShow, HudBarIterElement.PostFix);
-		HudBarIterElement.TileText->SetString(kTileValue_string, TempText);
+		sprintf(TempText, "%s%d%s", HBIter.Prefix, iToShow, HBIter.PostFix);
+		HBIter.TileText->SetString(kTileValue_string, TempText);
 		break;
 		//default:
 			//break;
@@ -248,11 +295,20 @@ float g_TimerEvalHBVars = 0;
 int	  g_EvalHBVarsTime = 0;
 int	  g_TimerStarted = 0;
 
+int g_iMyInt;
+
 void f_Bars_Iterate()
 {
-	_MESSAGE("Script execution START");
-	plf::nanotimer perf_timer;
-	perf_timer.start();
+	//_MESSAGE("Script execution START");
+	//plf::nanotimer perf_timer;
+	//perf_timer.start();
+
+
+
+
+
+
+
 
 	float elapsedTime = g_timer.get_elapsed_ms() - g_TimeElapsed;
 	g_TimeElapsed = g_timer.get_elapsed_ms();
@@ -299,21 +355,21 @@ void f_Bars_Iterate()
 		//Console_Print("Current Bar  is %s ", HudBarIterElementV.Name);
 		//Console_Print("Current Bar vis is %d ", HudBarIterElementV.iBarVisible);
 
-		if (HudBarIterElementV.iBarVisible) {}
+		if (HBIterV.iBarVisible) {}
 		else { continue; }
 
 		iHide = 0;
 
-		_MESSAGE("Current Bar VISIBLE is %s ", HudBarIterElementV.Name);
+		//_MESSAGE("Current Bar VISIBLE is %s ", HBIterV.Name);
 
 		if (g_EvalHBVarsTime == 1)
 		{
-			if (HudBarIterElementV.iMenuTypeShow && HudBarIterElementV.iMenuTypeShow != g_interfaceManager->currentMode)
+			if (HBIterV.iMenuTypeShow && HBIterV.iMenuTypeShow != g_interfaceManager->currentMode)
 			{
 				iHide = 1;
 			}
 
-			if (HudBarIterElementV.iDisableControlMovement)
+			if (HBIterV.iDisableControlMovement)
 			{
 				if (g_ThePlayer->pcControlFlags & (1 << 0))
 				{
@@ -321,9 +377,9 @@ void f_Bars_Iterate()
 				}
 			}
 
-			if (HudBarIterElementV.iDisableWhenCombat)
+			if (HBIterV.iDisableWhenCombat)
 			{
-				if (HudBarIterElementV.iDisableWhenCombat == 1)
+				if (HBIterV.iDisableWhenCombat == 1)
 				{
 					if (g_ThePlayer->pcInCombat)
 					{
@@ -343,9 +399,9 @@ void f_Bars_Iterate()
 
 			}
 
-			if (HudBarIterElementV.iDisableWhenSneaking)
+			if (HBIterV.iDisableWhenSneaking)
 			{
-				if (HudBarIterElementV.iDisableWhenSneaking == 1)
+				if (HBIterV.iDisableWhenSneaking == 1)
 				{
 					if ((g_ThePlayer->GetMovementFlags() & 0xC00) == 0x400) // From JiP
 					{
@@ -358,92 +414,170 @@ void f_Bars_Iterate()
 						iHide = 1;
 					}
 				}
-
-
 			}
 
-			if (HudBarIterElementV.iDisableWhenAiming)
+			if (HBIterV.iDisableWhenNotEquipped)
 			{
-				if (HudBarIterElementV.iDisableWhenAiming == 1)
+				//_MESSAGE("HudBarIterElementV.iDisableWhenNotEquipped::%s", HBIterV.Name);
+
+
+					if (HBIterV.iHookedItemIsAList)
+					{
+						if (HBIterV.listForm)
+						{
+							//_MESSAGE("HudBarIterElementV.iHookedItemIsAList == 1::%s", HBIterV.Name);
+							TESForm* item;
+							int iFoundItem = 0;
+							ListNode<TESForm>* traverse = HBIterV.listForm->list.Head();
+							do
+							{
+								//_MESSAGE("TRAVERSING THROUGH LIST::%s", HBIterV.Name);
+								if (traverse->data)
+								{
+									//_MESSAGE("ITEM EXISTS::: %s", traverse->data->GetName());
+									if (g_ThePlayer->IsItemEquipped(traverse->data) == 1)
+									{
+										//_MESSAGE("FOUND ITEM", HBIterV.Name);
+										iFoundItem = 1;
+										break;
+									}
+
+								}
+							}
+							while (traverse = traverse->next);
+
+							if (iFoundItem == 0)
+							{
+								iHide = 1;
+							}
+
+						}
+					}
+					else
+					{
+						if (HBIterV.HookedItem)
+						{
+							//_MESSAGE("CHECKING IF PLAYER EQUIPS::%s", HudBarIterElementV.HookedItem->GetName());
+							//Console_Print("CHECKING IF PLAYER EQUIPS::%s", HudBarIterElementV.HookedItem->GetName());
+							if (g_ThePlayer->IsItemEquipped(HBIterV.HookedItem) == 0)
+							{
+								iHide = 1;
+								//_MESSAGE("HIDING BECAUSE ITEM IS NOT EQUIPPED FOR::%s", HudBarIterElementV.Name);
+								//_MESSAGE("ITEM IS::%s", HudBarIterElementV.HookedItem->GetName());
+							}
+						}
+					}
+				}
+				else {
+
+					//_MESSAGE("NO HOOKED ITEM::%s", HudBarIterElementV.Name);
+				}
+
+
+			if (HBIterV.iDisableWhenAiming)
+			{
+				if (HBIterV.iDisableWhenAiming == 1)
 				{
 					if (g_HUDMainMenu->isUsingScope || g_ThePlayer->ironSightNode && g_ThePlayer->baseProcess->IsWeaponOut())
 					{
 						iHide = 1;
 					}
-
 				}
 				else {
 					if (g_HUDMainMenu->isUsingScope == 0 && (g_ThePlayer->ironSightNode && g_ThePlayer->baseProcess->IsWeaponOut()) == 0)
 					{
 						iHide = 1;
 					}
-
-
 				}
 
 			}
 
+			if (HBIterV.iDisableWhenWeaponOut)
+			{
+				if (HBIterV.iDisableWhenWeaponOut == 1)
+				{
+					if (g_ThePlayer->baseProcess->IsWeaponOut())
+					{
+						iHide = 1;
+					}
+				}
+				else {
+					if (g_ThePlayer->baseProcess->IsWeaponOut() == 0)
+					{
+						iHide = 1;
+					}
+				}
+
+			}
+
+
+
+			
+
+
+
 			if (iHide)
 			{
-				if (HudBarIterElementV.iHidden)
+				if (HBIterV.iHidden)
 				{}
 				else {
 					//_MESSAGE("HIDING BAR:: %s ", HudBarIterElementV.Name);
-					HudBarIterElementV.iHidden = 1;
-					ThisCall(0xA07DC0, HudBarIterElementV.TileFrame, kTileValue_alpha);
-					ThisCall(0xA07DC0, HudBarIterElementV.TileText, kTileValue_alpha);
-					ThisCall(0xA07DC0, HudBarIterElementV.TileMeter, kTileValue_alpha);
-					ThisCall(0xA07DC0, HudBarIterElementV.TileImageEx, kTileValue_alpha);
+					HBIterV.iHidden = 1;
+					ThisCall(0xA07DC0, HBIterV.TileFrame, kTileValue_alpha);
+					ThisCall(0xA07DC0, HBIterV.TileText, kTileValue_alpha);
+					ThisCall(0xA07DC0, HBIterV.TileMeter, kTileValue_alpha);
+					ThisCall(0xA07DC0, HBIterV.TileImageEx, kTileValue_alpha);
 
-					if (HudBarIterElementV.iGradualVanishingMovement)
+					if (HBIterV.iGradualVanishingMovement)
 					{
-						switch (HudBarIterElementV.iGradualVanishingMovement) {
+						switch (HBIterV.iGradualVanishingMovement) {
 							case 1:
-								ThisCall(0xA07DC0, HudBarIterElementV.TileMeter, kTileValue_x);
-								HudBarIterElementV.TileRect->GradualSetFloat(kTileValue_x, HudBarIterElementV.fRectPosX, HudBarIterElementV.fRectPosX + HudBarIterElementV.fGradualVanishingPosShift, HudBarIterElementV.fGradualVanishingTimer, 0);
+								ThisCall(0xA07DC0, HBIterV.TileMeter, kTileValue_x);
+								HBIterV.TileRect->GradualSetFloat(kTileValue_x, HBIterV.fRectPosX, HBIterV.fRectPosX + HBIterV.fGradualVanishingPosShift, HBIterV.fGradualVanishingTimer, 0);
 								break;
 							case 2:
-								ThisCall(0xA07DC0, HudBarIterElementV.TileMeter, kTileValue_y);
-								HudBarIterElementV.TileRect->GradualSetFloat(kTileValue_y, HudBarIterElementV.fRectPosY, HudBarIterElementV.fRectPosY + HudBarIterElementV.fGradualVanishingPosShift, HudBarIterElementV.fGradualVanishingTimer, 0);
+								ThisCall(0xA07DC0, HBIterV.TileMeter, kTileValue_y);
+								HBIterV.TileRect->GradualSetFloat(kTileValue_y, HBIterV.fRectPosY, HBIterV.fRectPosY + HBIterV.fGradualVanishingPosShift, HBIterV.fGradualVanishingTimer, 0);
 								break;
 						}
 					}
 
-					if (HudBarIterElementV.iGradualVanishing)
+					if (HBIterV.iGradualVanishing)
 					{
-						HudBarIterElementV.TileFrame->GradualSetFloat(kTileValue_alpha, 255, 0, HudBarIterElementV.fGradualVanishingTimer, 0);
-						HudBarIterElementV.TileText->GradualSetFloat(kTileValue_alpha, 255, 0, HudBarIterElementV.fGradualVanishingTimer, 0);
-						HudBarIterElementV.TileMeter->GradualSetFloat(kTileValue_alpha, 255, 0, HudBarIterElementV.fGradualVanishingTimer, 0);
-						HudBarIterElementV.TileImageEx->GradualSetFloat(kTileValue_alpha, 255, 0, HudBarIterElementV.fGradualVanishingTimer, 0);
+
+						HBIterV.TileMeter->GradualSetFloat(kTileValue_alpha, HBIterV.TileMeter->GetValueFloat(kTileValue_alpha), 0, HBIterV.fGradualVanishingTimer, 0);
+						HBIterV.TileFrame->GradualSetFloat(kTileValue_alpha, 255, 0, HBIterV.fGradualVanishingTimer, 0);
+						HBIterV.TileText->GradualSetFloat(kTileValue_alpha, 255, 0, HBIterV.fGradualVanishingTimer, 0);
+						HBIterV.TileImageEx->GradualSetFloat(kTileValue_alpha, 255, 0, HBIterV.fGradualVanishingTimer, 0);
 					}
 					else {
-						HudBarIterElementV.TileFrame->SetFloat(kTileValue_alpha, 0);
-						HudBarIterElementV.TileText->SetFloat(kTileValue_alpha, 0);
-						HudBarIterElementV.TileMeter->SetFloat(kTileValue_alpha, 0);
-						HudBarIterElementV.TileImageEx->SetFloat(kTileValue_alpha, 0);
+						HBIterV.TileFrame->SetFloat(kTileValue_alpha, 0);
+						HBIterV.TileText->SetFloat(kTileValue_alpha, 0);
+						HBIterV.TileMeter->SetFloat(kTileValue_alpha, 0);
+						HBIterV.TileImageEx->SetFloat(kTileValue_alpha, 0);
 					}
 
 				}
 				continue;
 			}
 			else {
-				if (HudBarIterElementV.iHidden)
+				if (HBIterV.iHidden)
 				{
 					//_MESSAGE("SHOWING BAR:: %s ", HudBarIterElementV.Name);
 
-					HudBarIterElementV.iHidden = 0;
+					HBIterV.iHidden = 0;
 
 
-					if (HudBarIterElementV.iGradualAppearingMovement)
+					if (HBIterV.iGradualAppearingMovement)
 					{
-						switch (HudBarIterElementV.iGradualAppearingMovement) {
+						switch (HBIterV.iGradualAppearingMovement) {
 						case 1:
-							ThisCall(0xA07DC0, HudBarIterElementV.TileMeter, kTileValue_x);
-							HudBarIterElementV.TileRect->GradualSetFloat(kTileValue_x, HudBarIterElementV.fRectPosX + HudBarIterElementV.fGradualAppearingPosShift, HudBarIterElementV.fRectPosX, HudBarIterElementV.fGradualAppearingTimer, 0);
+							ThisCall(0xA07DC0, HBIterV.TileMeter, kTileValue_x);
+							HBIterV.TileRect->GradualSetFloat(kTileValue_x, HBIterV.fRectPosX + HBIterV.fGradualAppearingPosShift, HBIterV.fRectPosX, HBIterV.fGradualAppearingTimer, 0);
 							break;
 						case 2:
-							ThisCall(0xA07DC0, HudBarIterElementV.TileMeter, kTileValue_y);
-							HudBarIterElementV.TileRect->GradualSetFloat(kTileValue_y, HudBarIterElementV.fRectPosY + HudBarIterElementV.fGradualAppearingPosShift, HudBarIterElementV.fRectPosY, HudBarIterElementV.fGradualAppearingTimer, 0);
+							ThisCall(0xA07DC0, HBIterV.TileMeter, kTileValue_y);
+							HBIterV.TileRect->GradualSetFloat(kTileValue_y, HBIterV.fRectPosY + HBIterV.fGradualAppearingPosShift, HBIterV.fRectPosY, HBIterV.fGradualAppearingTimer, 0);
 							break;
 						}
 					}
@@ -452,23 +586,23 @@ void f_Bars_Iterate()
 
 
 
-					ThisCall(0xA07DC0, HudBarIterElementV.TileFrame, kTileValue_alpha);
-					ThisCall(0xA07DC0, HudBarIterElementV.TileText, kTileValue_alpha);
-					ThisCall(0xA07DC0, HudBarIterElementV.TileMeter, kTileValue_alpha);
-					ThisCall(0xA07DC0, HudBarIterElementV.TileImageEx, kTileValue_alpha);
+					ThisCall(0xA07DC0, HBIterV.TileFrame, kTileValue_alpha);
+					ThisCall(0xA07DC0, HBIterV.TileText, kTileValue_alpha);
+					ThisCall(0xA07DC0, HBIterV.TileMeter, kTileValue_alpha);
+					ThisCall(0xA07DC0, HBIterV.TileImageEx, kTileValue_alpha);
 
-					if (HudBarIterElementV.iGradualAppearing)
+					if (HBIterV.iGradualAppearing)
 					{
-						HudBarIterElementV.TileFrame->GradualSetFloat(kTileValue_alpha, 0, 255, HudBarIterElementV.fGradualAppearingTimer, 0);
-						HudBarIterElementV.TileText->GradualSetFloat(kTileValue_alpha, 0, 255, HudBarIterElementV.fGradualAppearingTimer, 0);
-						HudBarIterElementV.TileMeter->GradualSetFloat(kTileValue_alpha, 0, 255, HudBarIterElementV.fGradualAppearingTimer, 0);
-						HudBarIterElementV.TileImageEx->GradualSetFloat(kTileValue_alpha, 0, 255, HudBarIterElementV.fGradualAppearingTimer, 0);
+						HBIterV.TileFrame->GradualSetFloat(kTileValue_alpha, 0, 255, HBIterV.fGradualAppearingTimer, 0);
+						HBIterV.TileText->GradualSetFloat(kTileValue_alpha, 0, 255, HBIterV.fGradualAppearingTimer, 0);
+						HBIterV.TileMeter->GradualSetFloat(kTileValue_alpha, 0, 255, HBIterV.fGradualAppearingTimer, 0);
+						HBIterV.TileImageEx->GradualSetFloat(kTileValue_alpha, 0, 255, HBIterV.fGradualAppearingTimer, 0);
 					}
 					else {
-						HudBarIterElementV.TileFrame->SetFloat(kTileValue_alpha, 0);
-						HudBarIterElementV.TileText->SetFloat(kTileValue_alpha, 0);
-						HudBarIterElementV.TileMeter->SetFloat(kTileValue_alpha, 0);
-						HudBarIterElementV.TileImageEx->SetFloat(kTileValue_alpha, 0);
+						HBIterV.TileFrame->SetFloat(kTileValue_alpha, 0);
+						HBIterV.TileText->SetFloat(kTileValue_alpha, 0);
+						HBIterV.TileMeter->SetFloat(kTileValue_alpha, 0);
+						HBIterV.TileImageEx->SetFloat(kTileValue_alpha, 0);
 					}
 				}
 			}
@@ -476,73 +610,73 @@ void f_Bars_Iterate()
 		}
 
 
-		if (HudBarIterElementV.ValueType > k_HBValueTypeNoScriptVar) {}
+		if (HBIterV.ValueType > k_HBValueTypeNoScriptVar) {}
 		else { continue; }
 
-		if (HudBarIterElementV.fCurTimer < 0)
+		if (HBIterV.fCurTimer < 0)
 		{
-			HudBarIterElementV.fCurTimer = HudBarIterElementV.fUpdateTimer;
-			_MESSAGE("SETTING VAL");
+			HBIterV.fCurTimer = HBIterV.fUpdateTimer;
+			//_MESSAGE("SETTING VAL");
 		}
 		else {
-			HudBarIterElementV.fCurTimer -= elapsedTime;
-			_MESSAGE("CONTINUING WITHOUT SETTING VAL");
+			HBIterV.fCurTimer -= elapsedTime;
+			//_MESSAGE("CONTINUING WITHOUT SETTING VAL");
 			continue;
 		}
 		
 
-		if (HudBarIterElementV.ValueType == k_HBValueTypeScriptVar)
+		if (HBIterV.ValueType == k_HBValueTypeScriptVar)
 		{
-			ScriptVariable = HudBarIterElementV.ScriptVariable;
+			ScriptVariable = HBIterV.ScriptVariable;
 			fBarVarValue = ScriptVariable->data.num;
-			if (HudBarIterElementV.iScriptValueCalculateMax)
+			if (HBIterV.iScriptValueCalculateMax)
 			{
-				fMaxValue = HudBarIterElementV.MaxValue;
+				fMaxValue = HBIterV.MaxValue;
 				fBarVarValue = fBarVarValue / fMaxValue;
 				if (fBarVarValue > 1)
 					fBarVarValue = 1;
 				else if (fBarVarValue < 0)
 					fBarVarValue = 0;
 			}
-		}else if (HudBarIterElementV.ValueType == k_HBValueTypeScriptFunction)
+		}else if (HBIterV.ValueType == k_HBValueTypeScriptFunction)
 		{
 			NVSEArrayElement element;
 			element.num = std::numeric_limits<float>::quiet_NaN();
 
-			if (HudBarIterElementV.FunctionToCall)
+			if (HBIterV.FunctionToCall)
 			{
-				if (HudBarIterElementV.FunctionCaller)
+				if (HBIterV.FunctionCaller)
 				{
-					FunctionCallScript(HudBarIterElementV.FunctionToCall, HudBarIterElementV.FunctionCaller, NULL, &element, NULL);
+					FunctionCallScript(HBIterV.FunctionToCall, HBIterV.FunctionCaller, NULL, &element, NULL);
 				}
 				else {
-					FunctionCallScript(HudBarIterElementV.FunctionToCall, NULL, NULL, &element, NULL);
+					FunctionCallScript(HBIterV.FunctionToCall, NULL, NULL, &element, NULL);
 				}
 
 				if (element.num != std::numeric_limits<float>::quiet_NaN())
 				{
 					fBarVarValue = element.num;
-					if (HudBarIterElementV.iScriptValueCalculateMax)
+					if (HBIterV.iScriptValueCalculateMax)
 					{
 						fBarVarValue = fBarVarValue / fMaxValue;
 						if (fBarVarValue > 1)
 							fBarVarValue = 1;
 						else if (fBarVarValue < 0)
 							fBarVarValue = 0;
-						Console_Print("fBarVarValue is %f ", element.num);
+						//Console_Print("fBarVarValue is %f ", element.num);
 					}
 	
 	
 				}else{
 					fBarVarValue = 0;
-					_MESSAGE("Function result is not valid for bar->>%s", HudBarIterElementV.Name);
+					//_MESSAGE("Function result is not valid for bar->>%s", HBIterV.Name);
 				}
 
 
 
 			}
 			else {
-				_MESSAGE("Current FUNCTION DOESNT EXIST");
+				//_MESSAGE("Current FUNCTION DOESNT EXIST");
 			}
 
 		}
@@ -556,7 +690,7 @@ void f_Bars_Iterate()
 	g_EvalHBVarsTime = 0;
 
 
-	_MESSAGE("Script execution END ms::%f", perf_timer.get_elapsed_ms());
+	//_MESSAGE("Script execution END ms::%f", perf_timer.get_elapsed_ms());
 }
 
 

@@ -911,4 +911,20 @@ public:
 
 
 
+struct GradualSetFloat // From JIP
+{
+	float		startValue;		// 00
+	float		endValue;		// 04
+	UInt32		startTimeMS;	// 08
+	float		durationMS;		// 0C
+	UInt32		valueID;		// 10
+	Tile* tile;			// 14
+	UInt32		changeMode;		// 18	0-4, see 0xA081B5
+	//	0		From start to end in duration
+	//	1		From start to end to start, in duration, perpetually
+	//	2		From start to end to start, in duration, 4 times
+	//	3		From start to end to start, 7 times, in duration
+	//	4		From start to end in duration/6, end for duration*2/3, from end to start in duration/6
+	//	5**		From start to end, in duration, perpetually (suitable for image rotation)
+};
 

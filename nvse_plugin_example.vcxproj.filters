@@ -173,6 +173,9 @@
     <ClInclude Include="NanoTimer.h">
       <Filter>local</Filter>
     </ClInclude>
+    <ClInclude Include="Tomm_EventCaller.h">
+      <Filter>local</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="exports.def" />

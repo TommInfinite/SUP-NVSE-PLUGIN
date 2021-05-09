@@ -101,7 +101,7 @@ void gdiscreenAlt(char* s_strFolderName, char* s_strArgTemp, float fPosXStart, f
 
 
 		membit = CreateCompatibleBitmap(scrdc, fpicSizeX, fpicSizeY);
-		_MESSAGE("Current SUP stage %i", 7);
+		//_MESSAGE("Current SUP stage %i", 7);
 		HBITMAP hOldBitmap = (HBITMAP)SelectObject(memdc, membit);
 		//BitBlt(memdc, 0, 0, Width, Height, scrdc, 0, 0, SRCCOPY);
 		//_MESSAGE("Current SUP stage %i", 8);

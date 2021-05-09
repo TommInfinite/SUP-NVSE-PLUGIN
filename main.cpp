@@ -31,8 +31,7 @@
 #include <vector>
 #include <memory>
 #include <NanoTimer.h>
-
-
+#include <Tomm_EventCaller.h>
 
 
 
@@ -73,9 +72,7 @@ PlayerCharacter* g_ThePlayer = NULL;
 Tile* g_kMenuRoot = NULL;
 Tile* g_Cursor = NULL;
 DataHandler* g_dataHandler = nullptr; // from JG
-
-
-
+tList<GradualSetFloat>* g_queuedGradualSetFloat = (tList<GradualSetFloat>*)0x11F3348; // From JiP
 
 FontManagerJIP* g_fontManager = NULL; // FROM JIP
 
@@ -83,14 +80,14 @@ FontManagerJIP* g_fontManager = NULL; // FROM JIP
 //VATSCameraData* g_VATSCameraData = (VATSCameraData*)0x11F2250; // From JIP
 VATSMenu** g_VATSMenu = (VATSMenu**)0x11DB0D4;
 ProcessManager* g_processManager = (ProcessManager*)0x11E0E80; // From JiP
-UInt32 SUPNVSEVersion = 144;
+UInt32 SUPNVSEVersion = 200; ////////////////////////////////////////////////////////////////////////////VERSION
 #define NUM_ARGS *((UInt8*)scriptData + *opcodeOffsetPtr)
 #define REFR_RES *(UInt32*)result // From JIP
 #define IS_ACTOR(form) ((*(UInt32**)form)[0x40] == 0x8D0360) // From JIP
 #define GetRandomIntInRange(iMin, iMax) ThisCall<SInt32, SInt32>(0xAA5230, (void*)0x11C4180, iMax - iMin) + iMin // From JIP
 
-#define HudBarIterElement g_HUDBArsArrayV[iKey]
-#define HudBarIterElementV (*it)
+#define HBIter g_HUDBArsArrayV[iKey]
+#define HBIterV (*it)
 #define VectorIter (*it)
 
 
@@ -116,6 +113,23 @@ typedef NVSEArrayVarInterface::Array NVSEArrayVar;
 typedef NVSEArrayVarInterface::Element NVSEArrayElement;
 
 bool (*FunctionCallScript)(Script* funcScript, TESObjectREFR* callingObj, TESObjectREFR* container, NVSEArrayElement* result, UInt8 numArgs, ...);
+
+
+bool IsGradualSetFloat(Tile* tile, UInt32 valueID) // Written by JiP
+{
+	auto iter = g_queuedGradualSetFloat->Head();
+	GradualSetFloat* grad;
+	do
+	{
+		grad = iter->data;
+		if (grad && (grad->tile == tile) && (grad->valueID == valueID))
+			return true;
+	} while (iter = iter->next);
+	return false;
+}
+
+
+
 #include <Tomm_HUDBars.h>
 #include "Tomm_FunctionCaller.h"
 
@@ -130,6 +144,421 @@ UInt8 TESForm::GetOverridingModIdx()
 	ModInfo* info = mods.GetLastItem();
 	return info ? info->modIndex : 0xFF;
 }
+
+enum ObjectVtbl
+{
+	kVtbl_BGSTextureSet = 0x1033D1C,
+	kVtbl_BGSMenuIcon = 0x1033654,
+	kVtbl_TESGlobal = 0x1036524,
+	kVtbl_TESClass = 0x1048BB4,
+	kVtbl_TESFaction = 0x10498DC,
+	kVtbl_BGSHeadPart = 0x10464B4,
+	kVtbl_TESHair = 0x1049B9C,
+	kVtbl_TESEyes = 0x104973C,
+	kVtbl_TESRace = 0x104B4BC,
+	kVtbl_TESSound = 0x1044FFC,
+	kVtbl_BGSAcousticSpace = 0x10320FC,
+	kVtbl_TESSkill = 0x104CC0C,
+	kVtbl_EffectSetting = 0x1012834,
+	kVtbl_Script = 0x1037094,
+	kVtbl_TESLandTexture = 0x102E6C4,
+	kVtbl_EnchantmentItem = 0x1012EA4,
+	kVtbl_SpellItem = 0x1013F8C,
+	kVtbl_TESObjectACTI = 0x1029D5C,
+	kVtbl_BGSTalkingActivator = 0x1025594,
+	kVtbl_BGSTerminal = 0x1025914,
+	kVtbl_TESObjectARMO = 0x102A62C,
+	kVtbl_TESObjectBOOK = 0x102A9C4,
+	kVtbl_TESObjectCLOT = 0x102AC0C,
+	kVtbl_TESObjectCONT = 0x102AEB4,
+	kVtbl_TESObjectDOOR = 0x102B1FC,
+	kVtbl_IngredientItem = 0x1013284,
+	kVtbl_TESObjectLIGH = 0x1028EE4,
+	kVtbl_TESObjectMISC = 0x102B844,
+	kVtbl_TESObjectSTAT = 0x102BA2C,
+	kVtbl_BGSStaticCollection = 0x102535C,
+	kVtbl_BGSMovableStatic = 0x1024CEC,	//	Has an irregular structure; the enumed vtbl is the "effective" one used at runtime; actual vtbl is 0x1024E84
+	kVtbl_BGSPlaceableWater = 0x1024F4C,
+	kVtbl_TESGrass = 0x102814C,
+	kVtbl_TESObjectTREE = 0x102BC94,
+	kVtbl_TESFlora = 0x1026BD0,
+	kVtbl_TESFurniture = 0x1026D0C,
+	kVtbl_TESObjectWEAP = 0x102C51C,
+	kVtbl_TESAmmo = 0x1026064,
+	kVtbl_TESNPC = 0x104A2F4,
+	kVtbl_TESCreature = 0x1048F5C,
+	kVtbl_TESLevCreature = 0x102886C,
+	kVtbl_TESLevCharacter = 0x102864C,
+	kVtbl_TESKey = 0x1028444,
+	kVtbl_AlchemyItem = 0x1011964,
+	kVtbl_BGSIdleMarker = 0x104664C,
+	kVtbl_BGSNote = 0x1046874,
+	kVtbl_BGSConstructibleObject = 0x10245A4,
+	kVtbl_BGSProjectile = 0x10251AC,
+	kVtbl_TESLevItem = 0x1028A64,
+	kVtbl_TESWeather = 0x103168C,
+	kVtbl_TESClimate = 0x102D5C4,
+	kVtbl_TESRegion = 0x102397C,
+	kVtbl_NavMeshInfoMap = 0x106BB8C,
+	kVtbl_TESObjectCELL = 0x102E9B4,
+	kVtbl_TESObjectREFR = 0x102F55C,
+	kVtbl_Character = 0x1086A6C,
+	kVtbl_Creature = 0x10870AC,
+	kVtbl_MissileProjectile = 0x108FA44,
+	kVtbl_GrenadeProjectile = 0x108F674,
+	kVtbl_BeamProjectile = 0x108C3C4,
+	kVtbl_FlameProjectile = 0x108F2F4,
+	kVtbl_Explosion = 0x108EE04,
+	kVtbl_TESWorldSpace = 0x103195C,
+	kVtbl_TESObjectLAND = 0x102DCD4,
+	kVtbl_NavMesh = 0x106A0B4,
+	kVtbl_TESTopic = 0x104D19C,
+	kVtbl_TESTopicInfo = 0x104D5B4,
+	kVtbl_TESQuest = 0x104AC44,
+	kVtbl_TESIdleForm = 0x1049D0C,
+	kVtbl_TESPackage = 0x106847C,
+	kVtbl_TESCombatStyle = 0x10266E4,
+	kVtbl_TESLoadScreen = 0x10366CC,
+	kVtbl_TESLevSpell = 0x1028C5C,
+	kVtbl_TESObjectANIO = 0x102A0A4,
+	kVtbl_TESWaterForm = 0x103140C,
+	kVtbl_TESEffectShader = 0x102685C,
+	kVtbl_BGSExplosion = 0x1024A94,
+	kVtbl_BGSDebris = 0x1024834,
+	kVtbl_TESImageSpace = 0x102D7F4,
+	kVtbl_TESImageSpaceModifier = 0x102D97C,
+	kVtbl_BGSListForm = 0x10334B4,
+	kVtbl_BGSPerk = 0x1046EC4,
+	kVtbl_BGSBodyPartData = 0x1045504,
+	kVtbl_BGSAddonNode = 0x1024214,
+	kVtbl_ActorValueInfo = 0x1067A2C,
+	kVtbl_BGSRadiationStage = 0x1033B34,
+	kVtbl_BGSCameraShot = 0x10327F4,
+	kVtbl_BGSCameraPath = 0x103245C,
+	kVtbl_BGSVoiceType = 0x104733C,
+	kVtbl_BGSImpactData = 0x1032F6C,
+	kVtbl_BGSImpactDataSet = 0x103323C,
+	kVtbl_TESObjectARMA = 0x102A31C,
+	kVtbl_BGSEncounterZone = 0x102CBBC,
+	kVtbl_BGSMessage = 0x10337C4,
+	kVtbl_BGSRagdoll = 0x10470EC,
+	kVtbl_BGSLightingTemplate = 0x102CD94,
+	kVtbl_BGSMusicType = 0x103397C,
+	kVtbl_TESObjectIMOD = 0x102B5AC,
+	kVtbl_TESReputation = 0x104BA24,
+	kVtbl_ContinuousBeamProjectile = 0x108EA64,
+	kVtbl_TESRecipe = 0x1036B2C,
+	kVtbl_TESRecipeCategory = 0x10369DC,
+	kVtbl_TESCasinoChips = 0x10263DC,
+	kVtbl_TESCasino = 0x1026574,
+	kVtbl_TESLoadScreenType = 0x1036854,
+	kVtbl_MediaSet = 0x10342EC,
+	kVtbl_MediaLocationController = 0x10340C4,
+	kVtbl_TESChallenge = 0x104891C,
+	kVtbl_TESAmmoEffect = 0x103449C,
+	kVtbl_TESCaravanCard = 0x103478C,
+	kVtbl_TESCaravanMoney = 0x10349B4,
+	kVtbl_TESCaravanDeck = 0x1034B4C,
+	kVtbl_BGSDehydrationStage = 0x101144C,
+	kVtbl_BGSHungerStage = 0x10115B4,
+	kVtbl_BGSSleepDeprevationStage = 0x10116FC,
+	kVtbl_PlayerCharacter = 0x108AA3C,
+
+	kVtbl_BGSQuestObjective = 0x1047088,
+	kVtbl_TESModelTextureSwap = 0x101D124,
+	kVtbl_BGSPrimitiveBox = 0x101E8C4,
+	kVtbl_BGSPrimitiveSphere = 0x101EA64,
+	kVtbl_BGSPrimitivePlane = 0x101E75C,
+	kVtbl_MagicShaderHitEffect = 0x107B70C,
+
+	kVtbl_BGSQuestPerkEntry = 0x1046B84,
+	kVtbl_BGSAbilityPerkEntry = 0x1046C44,
+	kVtbl_BGSEntryPointPerkEntry = 0x1046D0C,
+	kVtbl_BGSEntryPointFunctionDataOneValue = 0x10462C0,
+	kVtbl_BGSEntryPointFunctionDataTwoValue = 0x1046300,
+	kVtbl_BGSEntryPointFunctionDataLeveledList = 0x1046320,
+	kVtbl_BGSEntryPointFunctionDataActivateChoice = 0x1046340,
+
+	kVtbl_ExtraDataList = 0x10143E8,
+	kVtbl_ExtraSeenData = 0x1014294,
+	kVtbl_ExtraSpecialRenderFlags = 0x1014458,
+	kVtbl_ExtraPrimitive = 0x10151B4,
+	kVtbl_ExtraLinkedRef = 0x1015CC0,
+	kVtbl_ExtraRadius = 0x1015208,
+	kVtbl_ExtraCellWaterType = 0x1014270,
+	kVtbl_ExtraCellImageSpace = 0x1014258,
+	kVtbl_ExtraCellMusicType = 0x1014234,
+	kVtbl_ExtraCellClimate = 0x101424C,
+	kVtbl_ExtraTerminalState = 0x1015190,
+	kVtbl_ExtraCellAcousticSpace = 0x1014240,
+	kVtbl_ExtraOriginalReference = 0x1015BC4,
+	kVtbl_ExtraContainerChanges = 0x1015BB8,
+	kVtbl_ExtraWorn = 0x1015BDC,
+	kVtbl_ExtraHealth = 0x10158E4,
+	kVtbl_ExtraLock = 0x101589C,
+	kVtbl_ExtraCount = 0x10158D8,
+	kVtbl_ExtraTeleport = 0x10158A8,
+	kVtbl_ExtraWeaponModFlags = 0x10159A4,
+	kVtbl_ExtraHotkey = 0x101592C,
+	kVtbl_ExtraCannotWear = 0x1015BF4,
+	kVtbl_ExtraOwnership = 0x10158B4,
+	kVtbl_ExtraRank = 0x10158CC,
+	kVtbl_ExtraAction = 0x1015BAC,
+	kVtbl_ExtraFactionChanges = 0x1015F30,
+	kVtbl_ExtraScript = 0x1015914,
+	kVtbl_ExtraObjectHealth = 0x1015184,
+	kVtbl_ExtraStartingPosition = 0x1015B40,
+	kVtbl_ExtraPoison = 0x101595C,
+	kVtbl_ExtraCharge = 0x1015908,
+	kVtbl_ExtraRadiation = 0x1015214,
+	kVtbl_ExtraNorthRotation = 0x10142A0,
+	kVtbl_ExtraTimeLeft = 0x10158FC,
+	kVtbl_ExtraUses = 0x10158F0,
+
+	kVtbl_SeenData = 0x1083FC4,
+	kVtbl_IntSeenData = 0x1083FE4,
+
+	kVtbl_TileMenu = 0x106ED44,
+
+	kVtbl_MessageMenu = 0x107566C,
+	kVtbl_InventoryMenu = 0x10739B4,
+	kVtbl_StatsMenu = 0x106FFD4,
+	kVtbl_HUDMainMenu = 0x1072DF4,
+	kVtbl_LoadingMenu = 0x1073EBC,
+	kVtbl_ContainerMenu = 0x10721AC,
+	kVtbl_DialogMenu = 0x107257C,
+	kVtbl_SleepWaitMenu = 0x10763AC,
+	kVtbl_StartMenu = 0x1076D1C,
+	kVtbl_LockpickMenu = 0x107439C,
+	kVtbl_QuantityMenu = 0x10701C4,
+	kVtbl_MapMenu = 0x1074D44,
+	kVtbl_BookMenu = 0x1070ECC,
+	kVtbl_LevelUpMenu = 0x1073CDC,
+	kVtbl_RepairMenu = 0x1075C5C,
+	kVtbl_RaceSexMenu = 0x1075974,
+	kVtbl_CharGenMenu = 0x1071BB4,
+	kVtbl_TextEditMenu = 0x1070034,
+	kVtbl_BarterMenu = 0x10706EC,
+	kVtbl_SurgeryMenu = 0x1070084,
+	kVtbl_HackingMenu = 0x10728F4,
+	kVtbl_VATSMenu = 0x10700D4,
+	kVtbl_ComputersMenu = 0x1072004,
+	kVtbl_RepairServicesMenu = 0x1075DB4,
+	kVtbl_TutorialMenu = 0x106FF84,
+	kVtbl_SpecialBookMenu = 0x1070124,
+	kVtbl_ItemModMenu = 0x1073B7C,
+	kVtbl_LoveTesterMenu = 0x1070174,
+	kVtbl_CompanionWheelMenu = 0x1071D0C,
+	kVtbl_TraitSelectMenu = 0x1077ABC,
+	kVtbl_RecipeMenu = 0x107048C,
+	kVtbl_SlotMachineMenu = 0x10764DC,
+	kVtbl_BlackjackMenu = 0x10708FC,
+	kVtbl_RouletteMenu = 0x1075F7C,
+	kVtbl_CaravanMenu = 0x107108C,
+	kVtbl_TraitMenu = 0x10779BC,
+
+	kVtbl_NiNode = 0x109B5AC,
+	kVtbl_BSFadeNode = 0x10A8F90,
+	kVtbl_NiTriShape = 0x109D454,
+	kVtbl_NiTriStrips = 0x109CD44,
+	kVtbl_NiControllerManager = 0x109619C,
+	kVtbl_BSScissorTriShape = 0x10C2E7C,
+	kVtbl_NiPointLight = 0x109DD0C,
+	kVtbl_NiSpotLight = 0x10A01CC,
+	kVtbl_NiDirectionalLight = 0x109D7B4,
+	kVtbl_NiAlphaProperty = 0x10162DC,
+	kVtbl_NiMaterialProperty = 0x109D6C4,
+	kVtbl_NiStencilProperty = 0x101E07C,
+	kVtbl_TileShaderProperty = 0x10B9D28,
+	kVtbl_WaterShaderProperty = 0x10AE438,
+	kVtbl_BSShaderNoLightingProperty = 0x10AE670,
+	kVtbl_BSShaderPPLightingProperty = 0x10AE0D0,
+	kVtbl_SkyShaderProperty = 0x10B8CE0,
+	kVtbl_NiStringExtraData = 0x109D39C,
+	kVtbl_NiIntegerExtraData = 0x10A0D24,
+	kVtbl_NiFloatExtraData = 0x10A0EC4,
+	kVtbl_BSBound = 0x10C2B64,
+
+	kVtbl_ImageSpaceModifierInstanceForm = 0x102D12C,
+
+	kVtbl_hkpAabbPhantom = 0x10CC004,
+	kVtbl_hkpSimpleShapePhantom = 0x10CE15C,
+	kVtbl_hkpCachingShapePhantom = 0x10D087C,
+	kVtbl_hkpRigidBody = 0x10C7888,
+	kVtbl_hkpSphereMotion = 0x10C6D54,
+	kVtbl_hkpBoxMotion = 0x10C6DC4,
+	kVtbl_hkpThinBoxMotion = 0x10C6E34,
+	kVtbl_ahkpCharacterProxy = 0x10C83E8,
+};
+
+
+const char* GetNthModNameAlt(UInt32 modIndex)
+{
+	if (modIndex == 255)
+		return "Console";
+
+	const ModInfo** activeModList = g_dataHandler->GetActiveModList();
+	if (modIndex < g_dataHandler->GetActiveModCount() && activeModList[modIndex])
+		return activeModList[modIndex]->name;
+	else
+		return "";
+}
+
+
+
+
+__declspec(naked) ExtraContainerChanges::EntryData* Actor::GetWeaponInfo() // From JIP
+{
+	__asm
+	{
+		mov		eax, [ecx + 0x68]
+		test	eax, eax
+		jz		done
+		cmp		dword ptr[eax + 0x28], 1
+		ja		retnNULL
+		mov		eax, [eax + 0x114]
+		retn
+		retnNULL :
+		xor eax, eax
+			done :
+		retn
+	}
+}
+
+TESObjectWEAP* Actor::GetEquippedWeapon() // From JIP
+{
+	ExtraContainerChanges::EntryData* weaponInfo = GetWeaponInfo();
+	return weaponInfo ? (TESObjectWEAP*)weaponInfo->type : NULL;
+}
+
+
+__declspec(naked) TESForm* TESObjectREFR::GetBaseForm()// From JIP
+{
+	__asm
+	{
+		mov		eax, [ecx + 0x20]
+		test	eax, eax
+		jz		done
+		cmp		byte ptr[eax + 0xF], 0xFF
+		jnz		done
+		cmp		dword ptr[eax], kVtbl_BGSPlaceableWater
+		jz		isWater
+		push	eax
+		push	kExtraData_LeveledCreature
+		add		ecx, 0x44
+		call	BaseExtraList::GetByType
+		pop		ecx
+		test	eax, eax
+		cmovz	eax, ecx
+		jz		done
+		mov		eax, [eax + 0xC]
+		retn
+		isWater :
+		mov		eax, [eax + 0x4C]
+			done :
+			retn
+	}
+}
+
+__declspec(naked) TESForm* TESObjectREFR::GetBaseForm2()// From JIP
+{
+	__asm
+	{
+		mov		eax, [ecx + 0x20]
+		test	eax, eax
+		jz		done
+		cmp		byte ptr[eax + 0xF], 0xFF
+		jnz		done
+		push	kExtraData_LeveledCreature
+		add		ecx, 0x44
+		call	BaseExtraList::GetByType
+		test	eax, eax
+		jz		done
+		mov		eax, [eax + 0x10]
+		done:
+		retn
+	}
+}
+
+__declspec(naked) ExtraContainerChanges::EntryData* TESObjectREFR::GetContainerChangesEntry(TESForm* itemForm) // From JIP
+{
+	__asm
+	{
+		push	kExtraData_ContainerChanges
+		add		ecx, 0x44
+		call	BaseExtraList::GetByType
+		test	eax, eax
+		jz		done
+		mov		eax, [eax + 0xC]
+		test	eax, eax
+		jz		done
+		mov		ecx, [eax]
+		mov		edx, [esp + 4]
+		ALIGN 16
+		itemIter:
+		test	ecx, ecx
+			jz		retnNULL
+			mov		eax, [ecx]
+			mov		ecx, [ecx + 4]
+			test	eax, eax
+			jz		itemIter
+			cmp[eax + 8], edx
+			jnz		itemIter
+			retn	4
+			retnNULL:
+		xor eax, eax
+			done :
+		retn	4
+	}
+}
+
+
+#define NOT_TYPE(form, type) (*(UInt32*)form != kVtbl_##type)
+
+bool Actor::IsItemEquipped(TESForm* item) // From JIP
+{
+	if IS_ID(item, TESObjectWEAP)
+	{
+		//_MESSAGE("IS_ID(item, TESObjectWEAP)");
+		return item == GetEquippedWeapon();
+
+	}
+
+	if (NOT_TYPE(item, TESObjectARMO) || (typeID == kFormType_Creature))
+	{
+		//_MESSAGE("if (NOT_TYPE(item, TESObjectARMO) || (typeID == kFormType_Creature))");
+		return false;
+
+	}
+
+	ExtraContainerChanges::EntryData* entry = GetContainerChangesEntry(item);
+	if (!entry || !entry->extendData)
+	{
+		//_MESSAGE("!entry || !entry->extendData");
+		return false;
+	}
+
+	ListNode<ExtraDataList>* node = entry->extendData->Head();
+	ExtraDataList* xData;
+	do
+	{
+		xData = node->data;
+		if (xData && xData->HasType(kExtraData_Worn))
+		{
+			return true;
+			//_MESSAGE("RETURN BAR TRUE");
+
+		}
+
+	} 	while (node = node->next);
+
+	//_MESSAGE("RETURN BAR FALSE");
+	return false;
+}
+
+
+
+
 
 
 
@@ -220,15 +649,56 @@ __declspec(naked) bool KillActorExecute(COMMAND_ARGS) // From JIP
 
 
 
+char SUPPATH[FILENAME_MAX];
+void foo() {};
+
+void get_module_path(void* address)
+{
+	HMODULE hm = NULL;
+
+	if (!GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+		GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+		(LPCSTR)address, // if &address - returns F:NV handle?? Check later.
+		&hm))
+	{}
+	GetModuleFileNameA(hm, SUPPATH, sizeof(SUPPATH));
+
+}
+std::string base_name(std::string const& path)
+{
+	return path.substr(path.find_last_of("/\\") + 1);
+}
+void CheckForDLLName()
+{
+	get_module_path(foo);
+
+	std::string Result;
+	Result = base_name(SUPPATH);
+
+
+	if (0 == stricmp(Result.c_str(), "supNVSE.dll"))
+	{}
+	else {
+		_MESSAGE("SUP NVSE DLL PATH IS WRONG>>> %s", SUPPATH);
+		_MESSAGE("Result is %s", Result.c_str());
+		_MESSAGE("Please check if you have 2 SUP NVSE DLL files in the folder");
+		Console_Print("Result is %s", Result.c_str());
+		Console_Print("SUP NVSE DLL PATH IS WRONG>>> %s", SUPPATH);
+		Console_Print("Please check if you have 2 SUP NVSE DLL files in the folder");
+	}
+
+
+}
+
+
 
 void OnDeferredInit()
 {
-
+	CheckForDLLName();
 	CSimpleIniA ini;
 	ini.SetUnicode();
 	if (FileExists("Data/nvse/plugins/supNVSE.ini"))
-	{
-	}
+	{}
 	else {
 		ini.SetValue("Settings", "bTFCPosOnLoadFix", "1");
 		ini.SaveFile("Data//nvse//plugins//supNVSE.ini");
@@ -432,11 +902,11 @@ void MessageHandler(NVSEMessagingInterface::Message* msg)
 		break;
 
 	case NVSEMessagingInterface::kMessage_MainGameLoop:
-		if (g_HudBarsArraySize)
+		if (g_HudBarsIterate)
 			f_Bars_Iterate();
 
 
-		if (g_FuncCallerArraySize)
+		if (g_FuncCallerArrayIterate)
 			f_FuncCaller_Iterate();
 
 
@@ -453,14 +923,14 @@ void MessageHandler(NVSEMessagingInterface::Message* msg)
 
 #include "Tomm_fn_Utility.h"
 #include "Tomm_fn_UI.h"
-#include "Tomm_fn_Misc.h"
+
 #include "Tomm_fn_TFC.h"
 #include "Tomm_fn_Screenshot.h"
 #include "Tomm_fn_INI.h"
 #include "Tomm_fn_Array.h"
 #include "Tomm_fn_Math.h"
 #include "Tomm_fn_HudBars.h"
-
+#include "Tomm_fn_Misc.h"
 
 
 
@@ -492,8 +962,7 @@ bool NVSEPlugin_Query(const NVSEInterface* nvse, PluginInfo* info)
 	info->name = "SUP NVSE Plugin";
 	info->version = SUPNVSEVersion;
 
-	
-	//s_debug.CreateLog("Tomm_NVSE_Debug.log");
+
 
 	// version checks
 	if (nvse->nvseVersion < NVSE_VERSION_INTEGER)
@@ -548,6 +1017,8 @@ bool NVSEPlugin_Load(const NVSEInterface* nvse)
 
 	g_pluginHandle = nvse->GetPluginHandle();
 
+
+
 	// save the NVSEinterface in cas we need it later
 	g_nvseInterface = (NVSEInterface*)nvse;
 
@@ -562,8 +1033,6 @@ bool NVSEPlugin_Load(const NVSEInterface* nvse)
 
 
 	_MESSAGE("SUPNVSE Version: %d", SUPNVSEVersion);
-
-
 
 
 #if RUNTIME
@@ -651,7 +1120,7 @@ bool NVSEPlugin_Load(const NVSEInterface* nvse)
 	/*63*/REG_CMD_STR(Ar_GetRandomKeyMap);
 	/*64*/RegisterScriptCommand(Ar_HasInvalidRefs);
 	//  v.2.00
-	/*65*/RegisterScriptCommand(GetUIValueType); /////////////TEST TEST TEST
+	/*65*/RegisterScriptCommand(GetUIValueType);
 	/*66*/RegisterScriptCommand(IsProgramRunning); 
 	/*67*/REG_CMD_ARR(GetFileTime,Array);
 	/*68*/REG_CMD_STR(GetFileTimeSTR);
@@ -665,7 +1134,7 @@ bool NVSEPlugin_Load(const NVSEInterface* nvse)
 	/*76*/RegisterScriptCommand(DebugTextSetPos);
 	/*77*/RegisterScriptCommand(HudBarCreate)
 	/*78*/RegisterScriptCommand(HudBarDestroy);
-	/*79*/RegisterScriptCommand(HudBarGetBarType);
+	/*79*/RegisterScriptCommand(HudBarGetBarTrait);
 	/*80*/RegisterScriptCommand(HudBarExists);
 	/*81*/RegisterScriptCommand(HudBarSetAutoPos);
 	/*82*/RegisterScriptCommand(HudBarSetValueScriptVar);
@@ -685,20 +1154,27 @@ bool NVSEPlugin_Load(const NVSEInterface* nvse)
 	/*95*/REG_CMD_ARR(HudBarGetAllBars, Array);
 	/*96*/REG_CMD_STR(HudBarGetElementUIPath);
 	/*97*/RegisterScriptCommand(HudBarSetAlpha);
-	/*98*/RegisterScriptCommand(HudBarRemoveAllBars);
+	/*98*/RegisterScriptCommand(HudBarDestroyAllBars);
 	/*99*/RegisterScriptCommand(HudBarSetColor);
 	/*100*/RegisterScriptCommand(HudBarSetSystemColor);
-	/*91*/RegisterScriptCommand(HudBarSetFontTrait);
-	/*90*/RegisterScriptCommand(HudBarSetSizeAlt);
-	/*97*/RegisterScriptCommand(HudBarSetDepth);
-	/*97*/RegisterScriptCommand(HudBarSetZoom);
+	/*101*/RegisterScriptCommand(HudBarSetTextTrait);
+	/*102*/RegisterScriptCommand(HudBarSetSizeAlt);
+	/*103*/RegisterScriptCommand(HudBarSetDepth);
+	/*104*/RegisterScriptCommand(HudBarSetZoom);
+	/*105*/RegisterScriptCommand(HudBarSetItem);
+	/*106*/RegisterScriptCommand(HudBarSetRotation);
+	/*107*/RegisterScriptCommand(HudBarSetFormList);
+	/*108*/RegisterScriptCommand(HudBarGetDebugInfo);
+	/*109*/RegisterScriptCommand(HudBarGetDebugInfoAll);
+	/*110*/RegisterScriptCommand(HudBarSetIndent);
+	/*111*/RegisterScriptCommand(DumpLoadOrder)
+	/*112*/REG_CMD_STR(GetModTraitSTR);
+	
 
 	//*61*/RegisterScriptCommand(UIUpdateField);
 	//*20*/REG_CMD_ARR(SupTestArray, Array);
 	///*43*/RegisterScriptCommand(SUPPlayMP3File);
-	//RegisterScriptCommand(ToggleMouseInput);
-	//RegisterScriptCommand(GetUITraitValueType);
-	
+
 	return true;
 }
 

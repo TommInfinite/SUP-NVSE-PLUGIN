@@ -4,6 +4,11 @@ class FileStream
 {
 	FILE* theFile;
 
+protected:
+	HANDLE		theFile2;
+	UInt32		streamLength;
+	UInt32		streamOffset;
+
 public:
 	FileStream() : theFile(NULL) {}
 	~FileStream() { if (theFile) fclose(theFile); }
@@ -65,4 +70,46 @@ bool __fastcall FileExists(const char* path) /// From Stewie tweaks
 {
 	UInt32 attr = GetFileAttributes(path);
 	return (attr != INVALID_FILE_ATTRIBUTES) && !(attr & FILE_ATTRIBUTE_DIRECTORY);
+}
+
+//bool FileStream::OpenAt(const char* filePath, UInt32 inOffset)
+//{
+//	theFile = CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+//	if (theFile == INVALID_HANDLE_VALUE)
+//		return false;
+//	streamLength = GetFileSize(theFile, NULL);
+//	streamOffset = inOffset;
+//	if (streamOffset >= streamLength)
+//	{
+//		Close();
+//		return false;
+//	}
+//	if (streamOffset)
+//		SetFilePointer(theFile, streamOffset, NULL, FILE_BEGIN);
+//	return true;
+//}
+
+
+void FileStream::ReadBuf(void* outData, UInt32 inLength)
+{
+	UInt32 bytesRead;
+	ReadFile(theFile2, outData, inLength, &bytesRead, NULL);
+	streamOffset += bytesRead;
+}
+
+bool FileStream::OpenAt(const char* filePath, UInt32 inOffset)
+{
+	theFile2 = CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (theFile2 == INVALID_HANDLE_VALUE)
+		return false;
+	streamLength = GetFileSize(theFile2, NULL);
+	streamOffset = inOffset;
+	if (streamOffset >= streamLength)
+	{
+		Close();
+		return false;
+	}
+	if (streamOffset)
+		SetFilePointer(theFile2, streamOffset, NULL, FILE_BEGIN);
+	return true;
 }
