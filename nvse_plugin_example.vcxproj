@@ -364,6 +364,7 @@
     <ClInclude Include="decoding.h" />
     <ClInclude Include="Tomm_EventCaller.h" />
     <ClInclude Include="NanoTimer.h" />
+    <ClInclude Include="Tomm_fn_DialogueTopics.h" />
     <ClInclude Include="Tomm_FunctionCaller.h" />
     <ClInclude Include="Tomm_fn_HudBars.h" />
     <ClInclude Include="Tomm_HUDBars.h" />

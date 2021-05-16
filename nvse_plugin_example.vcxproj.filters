@@ -176,6 +176,9 @@
     <ClInclude Include="Tomm_EventCaller.h">
       <Filter>local</Filter>
     </ClInclude>
+    <ClInclude Include="Tomm_fn_DialogueTopics.h">
+      <Filter>functions</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="exports.def" />

@@ -9,7 +9,7 @@ DEFINE_COMMAND_PLUGIN(MarkScriptOnLoad, "", 0, 0, NULL)
 DEFINE_COMMAND_PLUGIN(IsScriptMarkedOnLoad, "", 0, 1, kParams_Tomm_OneForm)
 DEFINE_COMMAND_PLUGIN(GetNearCells, "", 0, 1, kParams_Tomm_OneInt)
 DEFINE_COMMAND_PLUGIN(GetNearMapMarkers, "", 0, 1, kParams_Tomm_OneInt)
-DEFINE_COMMAND_PLUGIN(SUPTest, "", 0, 0, 0)
+DEFINE_COMMAND_PLUGIN(SUPTest, "", 0, 0, NULL)
 DEFINE_COMMAND_PLUGIN(GetGrenadeTimeHeld, "", 0, 0, NULL)
 DEFINE_CMD_ALT_COND_PLUGIN(IsPlayerOverencumbered, , , 0, 0, NULL);	
 DEFINE_COMMAND_PLUGIN(SetCaughtPCPickpocketting, "", 1, 1, kParams_Tomm_OneIntOptional)
@@ -22,8 +22,7 @@ DEFINE_COMMAND_PLUGIN(FindRandomActor, "", 0, 6, kParams_Tomm_FindClosestActor)
 DEFINE_COMMAND_PLUGIN(CallFunctionNextFrame, "", 0, 3, kParams_Tomm_CallFunctionNextFrame)
 DEFINE_COMMAND_ALT_PLUGIN(DumpLoadOrder, DumpLO, "", 0, 0, NULL)
 DEFINE_COMMAND_PLUGIN(GetModTraitSTR, "", 0, 2, kParams_Tomm_TwoInts)
-
-
+DEFINE_COMMAND_PLUGIN(GetCurrentQuestObjectiveTeleportLinksAlt, "", 0, 0, NULL)
 
 
 
@@ -827,12 +826,7 @@ bool Cmd_CallFunctionNextFrame_Execute(COMMAND_ARGS)
 }
 
 
-bool Cmd_SUPTest_Execute(COMMAND_ARGS)
-{
 
-
-	return true;
-}
 
 template <typename I> std::string n2hexstr(I w, size_t hex_len = sizeof(I) << 1) {
 	static const char* digits = "0123456789ABCDEF";
@@ -918,6 +912,59 @@ bool Cmd_GetModTraitSTR_Execute(COMMAND_ARGS)
 	StrIfc->Assign(PASS_COMMAND_ARGS, f_Misc_GetModTraitSTR(iModIndex, iRequest));
 
 }
+
+
+
+
+
+
+
+
+bool Cmd_SUPTest_Execute(COMMAND_ARGS)
+{
+
+
+
+	return true;
+}
+
+
+
+
+bool Cmd_GetCurrentQuestObjectiveTeleportLinksAlt_Execute(COMMAND_ARGS)
+{
+
+	NVSEArrayVar* MarkArr = ArrIfc->CreateArray(NULL, 0, scriptObj);
+	QuestObjectiveTargets* targets = g_ThePlayer->GetCurrentQuestObjectiveTargets();
+	if (targets)
+	{
+		for (tList<BGSQuestObjective::Target>::Iterator iter = targets->Begin(); !iter.End(); ++iter)
+		{
+			BGSQuestObjective::Target* data = iter.Get();
+			if (data && data->target)
+			{
+				if (data && data->teleportLinks.size)
+				{
+					BGSQuestObjective::TeleportLink teleportLink = data->teleportLinks.data[0];
+					ArrIfc->AppendElement(MarkArr, NVSEArrayElement(teleportLink.door));
+				}
+				else {
+
+					ArrIfc->AppendElement(MarkArr, NVSEArrayElement(data->target));
+				}
+			}
+		}
+	}
+	ArrIfc->AssignCommandResult(MarkArr, result);
+	return true;
+
+}
+
+
+
+
+
+
 
 //bool Cmd_SupTestArray_Execute(COMMAND_ARGS)
 //{

@@ -8,6 +8,7 @@ using namespace std;
 #define k_HBMeterTypeAlpha 2
 #define k_HBMeterTypeText 3
 #define k_HBMeterTypeTextPercentage 4
+#define k_HBMeterTypeSize 5
 
 #define	k_HBValueTypeNoScriptVar 0
 #define k_HBValueTypeScriptVar 1
@@ -95,6 +96,17 @@ public:
 		float fAlphaMax = 255;
 		float fAlphaDifference = 255;
 
+		//MeterTypeSize
+		float fSizeXMin = 0;
+		float fSizeXMax = 0;
+		float fSizeXDelta =0;
+		float fSizeYMin = 0;
+		float fSizeYMax = 0;
+		float fSizeYDelta = 0;
+
+		float fMeterPosX = 0;
+		float fMeterPosY = 0;
+
 		//MeterTypeText
 		char Prefix[0x4000]{};
 		char PostFix[0x4000]{};
@@ -116,6 +128,7 @@ public:
 		int iHookedItemIsAList = 0;
 		TESForm* HookedItem = NULL;
 		BGSListForm* listForm = NULL;
+		int iCameraModeTypeShow = 0;
 	
 
 		bool operator==(const HudBar& other) const
@@ -203,7 +216,7 @@ int f_Bars_BarSetBarValue(int iKey, float fBarVarValue)
 	//_MESSAGE("fMaxValue is %f", HudBarIterElement.MaxValue);
 	//_MESSAGE("IterElement.MeterWidth is %f", HudBarIterElement.MeterWidth);
 	//_MESSAGE("fBarVarValue is %f", fBarVarValue);
-	
+	int iToShow = 0;
 
 	char TempText[0x4000]{};
 	switch (HBIter.MeterType) {
@@ -215,6 +228,8 @@ int f_Bars_BarSetBarValue(int iKey, float fBarVarValue)
 			fBarVarValue *= HBIter.MeterWidth;
 			HBIter.TileMeter->SetFloat(kTileValue_width, fBarVarValue);
 			HBIter.TileMeter->SetFloat(kTileValue_x, fAddPosX);
+
+
 		}
 		else {
 			fBarVarValue *= HBIter.MeterWidthAlt;
@@ -252,7 +267,7 @@ int f_Bars_BarSetBarValue(int iKey, float fBarVarValue)
 				HBIter.TileMeter->SetFloat(kTileValue_alpha, fBarVarValue);
 			}
 			else {
-				Console_Print("ALPHA GRADUAL SET FLOAT");
+				//Console_Print("ALPHA GRADUAL SET FLOAT");
 
 			}
 
@@ -276,12 +291,29 @@ int f_Bars_BarSetBarValue(int iKey, float fBarVarValue)
 		break;
 	case k_HBMeterTypeTextPercentage:
 		//_MESSAGE("Setting k_HBMeterTypeTextPercentage");
-		int iToShow = fBarVarValue * 100;
+		iToShow = fBarVarValue * 100;
 		sprintf(TempText, "%s%d%s", HBIter.Prefix, iToShow, HBIter.PostFix);
 		HBIter.TileText->SetString(kTileValue_string, TempText);
 		break;
-		//default:
-			//break;
+	case k_HBMeterTypeSize:
+
+		float fSizeX = HBIter.fSizeXMin + ((fBarVarValue * 100) * HBIter.fSizeXDelta);
+		float fPosX = HBIter.fMeterPosX - (0.5 * fSizeX);
+
+		float fSizeY = HBIter.fSizeYMin + ((fBarVarValue * 100) * HBIter.fSizeYDelta);
+		float fPosY = HBIter.fMeterPosY - (0.5 * fSizeY);
+
+		//Console_Print("HBIter.fSizeXDelta is %f", HBIter.fSizeXDelta);
+		//Console_Print("HBIter.fSizeYDelta is %f", HBIter.fSizeYDelta);
+
+		HBIter.TileMeter->SetFloat(kTileValue_width, fSizeX);
+		HBIter.TileMeter->SetFloat(kTileValue_height, fSizeY);
+		HBIter.TileMeter->SetFloat(kTileValue_x, fPosX);
+		HBIter.TileMeter->SetFloat(kTileValue_y, fPosY);
+
+		break;
+
+		
 	}
 
 	return 1;
@@ -511,6 +543,24 @@ void f_Bars_Iterate()
 			}
 
 
+			if (HBIterV.iCameraModeTypeShow)
+			{
+				if (HBIterV.iCameraModeTypeShow == 1)
+				{
+					if (g_ThePlayer->bThirdPerson)
+					{
+						iHide = 1;
+					}
+				}
+				else {
+					if (g_ThePlayer->bThirdPerson == 0)
+					{
+						iHide = 1;
+					}
+				}
+
+			}
+
 
 			
 
@@ -599,10 +649,10 @@ void f_Bars_Iterate()
 						HBIterV.TileImageEx->GradualSetFloat(kTileValue_alpha, 0, 255, HBIterV.fGradualAppearingTimer, 0);
 					}
 					else {
-						HBIterV.TileFrame->SetFloat(kTileValue_alpha, 0);
-						HBIterV.TileText->SetFloat(kTileValue_alpha, 0);
-						HBIterV.TileMeter->SetFloat(kTileValue_alpha, 0);
-						HBIterV.TileImageEx->SetFloat(kTileValue_alpha, 0);
+						HBIterV.TileFrame->SetFloat(kTileValue_alpha, 255);
+						HBIterV.TileText->SetFloat(kTileValue_alpha, 255);
+						HBIterV.TileMeter->SetFloat(kTileValue_alpha, 255);
+						HBIterV.TileImageEx->SetFloat(kTileValue_alpha, 255);
 					}
 				}
 			}

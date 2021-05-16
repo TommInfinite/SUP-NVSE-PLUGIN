@@ -58,6 +58,8 @@ static ParamInfo kParams_Tomm_OneForm[1] =
 };
 
 
+
+
 ParamInfo kParams_Tomm_OneFloat_OneOptionalInt[2] =
 {
 
@@ -604,6 +606,94 @@ static ParamInfo kParams_Tomm_HudBarSetColor[5] =
 	{ "float", kParamType_Float, 0 },
 	{ "float", kParamType_Float, 0 },
 	{ "float", kParamType_Float, 0 },
+};
+
+
+
+ParamInfo kParams_Tomm_HudBarGetVisible[3] =
+{
+	{"String", kParamType_String, 0},
+	{ "int", kParamType_Integer, 0 },
+	{ "int", kParamType_Integer, 1 },
+};
+
+
+
+
+
+static ParamInfo kParams_Tomm_DialogTopicInfoAddChoice[3] =
+{
+	{	"form",	kParamType_AnyForm,	0	},
+	{	"form",	kParamType_AnyForm,	0	},
+	{ "int", kParamType_Integer, 1 },
+};
+
+static ParamInfo kParams_Tomm_DialogTopicInfoHasChoice[2] =
+{
+	{	"form",	kParamType_AnyForm,	0	},
+	{	"form",	kParamType_AnyForm,	0	},
+};
+
+
+
+
+static ParamInfo kParams_Tomm_TopicInfoSetSaidOnce[2] =
+{
+	{	"form",	kParamType_AnyForm,	0	},
+	{ "int", kParamType_Integer, 1 },
+};
+
+
+static ParamInfo kParams_Tomm_TopicInfoSetPrompt[2] =
+{
+	{	"form",	kParamType_AnyForm,	0	},
+	{"String", kParamType_String, 1},
+};
+
+static ParamInfo kParams_Tomm_TopicInfoGetChoiceCount[1] =
+{
+	{	"form",	kParamType_AnyForm,	0	},
+};
+
+static ParamInfo kParams_Tomm_TopicInfoGetAllChoices[1] =
+{
+	{	"form",	kParamType_AnyForm,	0	},
+};
+
+static ParamInfo kParams_Tomm_TopicInfoDeleteAllChoices[1] =
+{
+	{	"form",	kParamType_AnyForm,	0	},
+};
+
+
+
+
+static ParamInfo kParams_Tomm_TopicInfoDeleteChoiceNth[2] =
+{
+	{	"form",	kParamType_AnyForm,	0	},
+	{ "int", kParamType_Integer, 0 },
+};
+
+static ParamInfo kParams_Tomm_TopicSetPriority[2] =
+{
+	{	"form",	kParamType_AnyForm,	0	},
+	{ "int", kParamType_Integer, 1 },
+};
+
+
+
+static ParamInfo kParams_Tomm_TopicSetFlags[2] =
+{
+	{	"form",	kParamType_AnyForm,	0	},
+	{ "int", kParamType_Integer, 1 },
+};
+
+
+
+static ParamInfo kParams_Tomm_TopicGetAllTopicInfos[2] =
+{
+	{	"form",	kParamType_AnyForm,	0	},
+	{"Quest", kParamType_Quest, 1},
 };
 
 

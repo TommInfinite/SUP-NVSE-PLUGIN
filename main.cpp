@@ -31,7 +31,7 @@
 #include <vector>
 #include <memory>
 #include <NanoTimer.h>
-#include <Tomm_EventCaller.h>
+
 
 
 
@@ -80,7 +80,7 @@ FontManagerJIP* g_fontManager = NULL; // FROM JIP
 //VATSCameraData* g_VATSCameraData = (VATSCameraData*)0x11F2250; // From JIP
 VATSMenu** g_VATSMenu = (VATSMenu**)0x11DB0D4;
 ProcessManager* g_processManager = (ProcessManager*)0x11E0E80; // From JiP
-UInt32 SUPNVSEVersion = 200; ////////////////////////////////////////////////////////////////////////////VERSION
+UInt32 SUPNVSEVersion = 210; ////////////////////////////////////////////////////////////////////////////VERSION
 #define NUM_ARGS *((UInt8*)scriptData + *opcodeOffsetPtr)
 #define REFR_RES *(UInt32*)result // From JIP
 #define IS_ACTOR(form) ((*(UInt32**)form)[0x40] == 0x8D0360) // From JIP
@@ -89,6 +89,10 @@ UInt32 SUPNVSEVersion = 200; ///////////////////////////////////////////////////
 #define HBIter g_HUDBArsArrayV[iKey]
 #define HBIterV (*it)
 #define VectorIter (*it)
+
+//Events
+int g_PlayerCamState = 0;
+
 
 
 //bool b_MouseInput = true;
@@ -132,6 +136,7 @@ bool IsGradualSetFloat(Tile* tile, UInt32 valueID) // Written by JiP
 
 #include <Tomm_HUDBars.h>
 #include "Tomm_FunctionCaller.h"
+#include "Tomm_EventCaller.h"
 
 Tile* InterfaceManager::GetActiveTile() //proably from JiP
 {
@@ -606,6 +611,7 @@ Tile* g_SUPRectBars;
 
 
 
+
 __declspec(naked) float __vectorcall GetDistance3D(TESObjectREFR* ref1, TESObjectREFR* ref2) // From JIP
 {
 	__asm
@@ -785,7 +791,7 @@ void MessageHandler(NVSEMessagingInterface::Message* msg)
 	{
 	case NVSEMessagingInterface::kMessage_LoadGame: 
 
-
+		//g_PlayerCamState = g_ThePlayer->is3rdPerson;
 
 		break;
 	case NVSEMessagingInterface::kMessage_SaveGame:
@@ -902,6 +908,18 @@ void MessageHandler(NVSEMessagingInterface::Message* msg)
 		break;
 
 	case NVSEMessagingInterface::kMessage_MainGameLoop:
+
+
+		//if (g_PlayerCamState != g_ThePlayer->is3rdPerson)
+		//{
+		//	g_PlayerCamState = g_ThePlayer->is3rdPerson;
+		//	f_EventCaller_IterateEventCameraMode(0);
+		//	Console_Print("g_PlayerCamState is %d", g_PlayerCamState);
+		//}
+
+
+
+
 		if (g_HudBarsIterate)
 			f_Bars_Iterate();
 
@@ -931,6 +949,7 @@ void MessageHandler(NVSEMessagingInterface::Message* msg)
 #include "Tomm_fn_Math.h"
 #include "Tomm_fn_HudBars.h"
 #include "Tomm_fn_Misc.h"
+#include "Tomm_fn_DialogueTopics.h"
 
 
 
@@ -1169,10 +1188,29 @@ bool NVSEPlugin_Load(const NVSEInterface* nvse)
 	/*110*/RegisterScriptCommand(HudBarSetIndent);
 	/*111*/RegisterScriptCommand(DumpLoadOrder)
 	/*112*/REG_CMD_STR(GetModTraitSTR);
-	
+	//  v.2.10
+	/*113*/RegisterScriptCommand(HudBarGetVisible);
+	/*114*/REG_CMD_ARR(GetCurrentQuestObjectiveTeleportLinksAlt, Array);
+	/*115*/RegisterScriptCommand(TopicInfoSetSaidOnce);
+	/*116*/RegisterScriptCommand(TopicInfoAddChoice);
+	/*117*/RegisterScriptCommand(TopicInfoHasChoice);
+	/*118*/RegisterScriptCommand(TopicInfoGetChoiceCount);
+	/*119*/REG_CMD_ARR(TopicInfoGetAllChoices);
+	/*120*/REG_CMD_STR(TopicInfoSetPrompt);
+	/*121*/RegisterScriptCommand(TopicSetPriority);
+	/*122*/RegisterScriptCommand(TopicSetFlags);
+	/*123*/RegisterScriptCommand(TopicGetType);
+	/*124*/REG_CMD_ARR(TopicGetAllTopicInfos);
 
-	//*61*/RegisterScriptCommand(UIUpdateField);
+
+
+
 	//*20*/REG_CMD_ARR(SupTestArray, Array);
+	//*114*/RegisterScriptCommand(HudBarSetOnVisibilityChangeEvent);
+	//*116*/RegisterScriptCommand(TopicInfoDeleteChoiceNth);
+	//*116*/RegisterScriptCommand(TopicInfoDeleteAllChoices);
+	//*61*/RegisterScriptCommand(UIUpdateField);
+
 	///*43*/RegisterScriptCommand(SUPPlayMP3File);
 
 	return true;

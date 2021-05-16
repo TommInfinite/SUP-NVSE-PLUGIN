@@ -33,7 +33,7 @@ DEFINE_COMMAND_ALT_PLUGIN(HudBarGetDebugInfo, HBGetDebugInfo, "", 0, 1, kParams_
 DEFINE_COMMAND_ALT_PLUGIN(HudBarGetDebugInfoAll, HBGetDebugInfoAll, "", 0, 0, NULL)
 DEFINE_COMMAND_ALT_PLUGIN(HudBarGetBarTrait, HBGetBarTrait, "", 0, 3, kParams_Tomm_HudBarGetBarTrait)
 DEFINE_COMMAND_ALT_PLUGIN(HudBarSetIndent, HBSetIndent, "", 0, 3, kParams_Tomm_HudBarSetFloatValueEx)
-
+DEFINE_COMMAND_ALT_PLUGIN(HudBarGetVisible, HBGetVisible, "", 0, 3, kParams_Tomm_HudBarGetVisible)
 
 
 
@@ -710,7 +710,10 @@ int f_Bars_BarSetBarTrait(char* s_BarName, int iTrait, float fValue, UInt8 modId
 			iRound = fValue;
 			HBIter.iDisableWhenWeaponOut = iRound;
 			break;
-
+		case 27:
+			iRound = fValue;
+			HBIter.iCameraModeTypeShow = iRound;
+			break;
 
 
 			
@@ -779,6 +782,9 @@ int f_Bars_BarSetPos(char* s_BarName, int iElement, float fPosX, float fPosY, UI
 	case 0:
 		HBIter.TileMeter->SetFloat(kTileValue_x, fPosX);
 		HBIter.TileMeter->SetFloat(kTileValue_y, fPosY);
+		HBIter.fMeterPosX = fPosX;
+		HBIter.fMeterPosY = fPosY;
+
 		break;
 	case 1:
 		HBIter.TileFrame->SetFloat(kTileValue_x, fPosX);
@@ -1004,6 +1010,11 @@ bool Cmd_HudBarSetSize_Execute(COMMAND_ARGS)
 //0 for AlphaMinValue
 //1 for AlphaMaxValue
 //2 for Show Max Value
+//3 for fSizeXMin
+//4 for fSizeXMax
+//5 for fSizeYMin
+//6 for fSizeYMax
+
 int f_Bars_BarSetMeterTrait(char* s_BarName, int iTrait, float fValue, UInt8 modIdx)
 {
 
@@ -1023,6 +1034,23 @@ int f_Bars_BarSetMeterTrait(char* s_BarName, int iTrait, float fValue, UInt8 mod
 	case 2:
 		HBIter.iShowMaxValue = fValue;
 		break;
+	case 3:
+		HBIter.fSizeXMin = fValue;
+		HBIter.fSizeXDelta = (HBIter.fSizeXMax - HBIter.fSizeXMin)/100;
+		break;
+	case 4:
+		HBIter.fSizeXMax = fValue;
+		HBIter.fSizeXDelta = (HBIter.fSizeXMax - HBIter.fSizeXMin) / 100;
+		break;
+	case 5:
+		HBIter.fSizeYMin = fValue;
+		HBIter.fSizeYDelta = (HBIter.fSizeYMax - HBIter.fSizeYMin) / 100;
+		break;
+	case 6:
+		HBIter.fSizeYMax = fValue;
+		HBIter.fSizeYDelta = (HBIter.fSizeYMax - HBIter.fSizeYMin) / 100;
+		break;
+
 	}
 
 	return 1;
@@ -1968,6 +1996,10 @@ float f_Bars_BarGetBarTrait(char* s_BarName, int iTrait, UInt8 modIdx)
 	case 26:
 		return HBIter.iDisableWhenWeaponOut;
 		break;
+	case 27:
+		return HBIter.iCameraModeTypeShow;
+		break;
+		
 
 
 
@@ -2010,7 +2042,6 @@ bool Cmd_HudBarGetBarTrait_Execute(COMMAND_ARGS)
 	char s_BarName[0x4000]{};
 	UInt8 modIdx = scriptObj->GetOverridingModIdx();
 	int  iTrait = 0, iModIndex = 0;
-	float fValue;
 	if (!ExtractArgsEx(EXTRACT_ARGS_EX, &s_BarName, &iTrait, &iModIndex)) return true;
 
 	if (NUM_ARGS > 2)
@@ -2068,3 +2099,59 @@ bool Cmd_HudBarSetIndent_Execute(COMMAND_ARGS)
 	return true;
 }
 
+
+
+
+
+
+float f_Bars_BarGetVisible(char* s_BarName, int iElement, UInt8 modIdx)
+{
+
+	int iKey = f_Bars_BarGetKey(s_BarName, modIdx);
+	if (iKey >= 0) {}
+	else { return -1; }
+
+	switch (iElement) {
+	case 0:
+		return HBIter.TileMeter->GetValue(kTileValue_visible)->num;
+		break;
+	case 1:
+		return HBIter.TileFrame->GetValue(kTileValue_visible)->num;
+		break;
+	case 2:
+		return HBIter.TileText->GetValue(kTileValue_visible)->num;
+		break;
+	case 3:
+		return HBIter.TileImageEx->GetValue(kTileValue_visible)->num;
+		break;
+
+
+	case 10:
+		if (HBIter.iHidden)
+		{
+			return -1;
+			break;
+		}
+
+		return HBIter.iBarVisible;
+
+
+		break;
+	}
+
+	return 1;
+}
+
+
+
+bool Cmd_HudBarGetVisible_Execute(COMMAND_ARGS)
+{
+	char s_BarName[0x4000]{};
+	UInt8 modIdx = scriptObj->GetOverridingModIdx();
+	int  iModIndex = 0, iElement = 0;
+
+	if (!ExtractArgsEx(EXTRACT_ARGS_EX, &s_BarName, &iElement, &modIdx)) return true;
+
+	*result = f_Bars_BarGetVisible(s_BarName, iElement, modIdx);
+	return true;
+}
