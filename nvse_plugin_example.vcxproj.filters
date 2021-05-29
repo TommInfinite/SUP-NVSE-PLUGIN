@@ -179,6 +179,9 @@
     <ClInclude Include="Tomm_fn_DialogueTopics.h">
       <Filter>functions</Filter>
     </ClInclude>
+    <ClInclude Include="Tomm_Nif_blocks.h">
+      <Filter>local</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="exports.def" />

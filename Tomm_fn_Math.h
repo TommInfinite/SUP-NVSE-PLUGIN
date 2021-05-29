@@ -141,7 +141,7 @@ bool Cmd_GetCalculatedPos_Execute(COMMAND_ARGS) //cos sin values taken from JiP
 bool Cmd_GetCalculatedPosAlt_Execute(COMMAND_ARGS) //cos sin values taken from JiP
 
 {
-	ScriptVar* outX, * outY;
+	ScriptVar* outX = NULL, * outY = NULL;
 	float fAngle, fDistance;
 	float fXIn, fYIn;
 

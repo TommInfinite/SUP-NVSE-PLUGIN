@@ -17,8 +17,12 @@ DEFINE_COMMAND_PLUGIN(DebugTextSetString, "", 0, 2, kParams_Tomm_TwoStrings)
 DEFINE_COMMAND_PLUGIN(DebugTextDestroy, "", 0, 1, kParams_Tomm_OneString)
 DEFINE_COMMAND_PLUGIN(DebugTextSetPos, "", 0, 3, kParams_Tomm_DebugTextSetPos)
 DEFINE_COMMAND_PLUGIN(GetFontTrait, "", 0, 2, kParams_Tomm_TwoInts)
-
-
+DEFINE_COMMAND_PLUGIN(GetUIElementType, , 0, 1, kParams_Tomm_OneStringOptional)
+DEFINE_COMMAND_PLUGIN(SetUIFloatMultiple, , 0, 4, kParams_Tomm_SetUIFloatMultiple)
+DEFINE_COMMAND_PLUGIN(GetUIFloatGradualActiveForTileTrait, , 0, 1, kParams_Tomm_OneString)
+DEFINE_COMMAND_PLUGIN(GetUIFloatGradualActiveForTile, , 0, 1, kParams_Tomm_OneString)
+DEFINE_COMMAND_PLUGIN(GetUIFloatGradualTimer, , 0, 2, kParams_Tomm_OneString_OneOptionalInt)
+DEFINE_COMMAND_PLUGIN(GetUIFloatGradualMode, , 0, 1, kParams_Tomm_OneString)
 
 
 
@@ -660,6 +664,144 @@ bool Cmd_GetFontTrait_Execute(COMMAND_ARGS) //Long wanted.
 	}
 	return true;
 }
+
+
+bool Cmd_GetUIElementType_Execute(COMMAND_ARGS)
+{
+	alignas(16) char s_strArgTemp2[0x4000];
+	if (ExtractArgsEx(EXTRACT_ARGS_EX, &s_strArgTemp2))
+	{
+		Tile* component = GetTargetComponent(s_strArgTemp2);
+		if (component) {
+			*result = component->GetType() - 900;
+		}
+		else
+		{
+			Tile* component = g_interfaceManager->GetActiveTile();
+			if (component)
+			{
+				*result = component->GetType() - 900;
+			}
+		}
+	}
+	return true;
+}
+
+
+bool Cmd_SetUIFloatMultiple_Execute(COMMAND_ARGS)
+{
+	alignas(16) char ComponentPath[0x4000], ValueString[0x4000];
+	float fValue = 0;
+	int iTypeFilter = 0, iTraitID = 0;
+	if (ExtractArgsEx(EXTRACT_ARGS_EX, &ComponentPath, &ValueString, &fValue, &iTypeFilter))
+	{
+		if (iTypeFilter != 0)
+		{
+			iTypeFilter += 900;
+		}
+
+		iTraitID = TraitNameToID(ValueString);
+
+		Tile* component = GetTargetComponent(ComponentPath);
+		if (component) {
+			component->SetUIFloatMass(iTraitID, fValue, iTypeFilter);
+		}
+	}
+	return true;
+}
+
+
+
+bool Cmd_GetUIFloatGradualActiveForTileTrait_Execute(COMMAND_ARGS)
+{
+	alignas(16) char s_strArgTemp2[0x4000];
+	*result = -1;
+	if (ExtractArgsEx(EXTRACT_ARGS_EX, &s_strArgTemp2))
+	{
+		Tile::Value* tileVal = NULL;
+		Tile* component = GetTargetComponent(s_strArgTemp2, &tileVal);
+
+		if (component)
+		{
+			if (tileVal)
+			{
+				*result = IsGradualSetFloatValue(component, tileVal->id);
+			}
+		}
+	}
+	return true;
+}
+
+
+bool Cmd_GetUIFloatGradualActiveForTile_Execute(COMMAND_ARGS)
+{
+	alignas(16) char s_strArgTemp2[0x4000];
+	if (ExtractArgsEx(EXTRACT_ARGS_EX, &s_strArgTemp2))
+	{
+
+		Tile* component = GetTargetComponent(s_strArgTemp2);
+
+
+		if (component)
+		{
+			*result = IsGradualSetFloatTile(component);
+		}
+		else { *result = -1; }
+	}
+	return true;
+}
+
+
+
+
+
+
+bool Cmd_GetUIFloatGradualTimer_Execute(COMMAND_ARGS)
+{
+	alignas(16) char s_strArgTemp2[0x4000];
+	int iRemaining = 0;
+	if (ExtractArgsEx(EXTRACT_ARGS_EX, &s_strArgTemp2, &iRemaining))
+	{
+		Tile::Value* tileVal = NULL;
+		Tile* component = GetTargetComponent(s_strArgTemp2, &tileVal);
+
+
+		if (component)
+		{
+			if (tileVal)
+			{
+				*result = IsGradualSetFloatTimer(component, tileVal->id, iRemaining);
+			}
+		}
+		else { *result = -1; }
+	}
+	return true;
+}
+
+
+
+
+bool Cmd_GetUIFloatGradualMode_Execute(COMMAND_ARGS)
+{
+	alignas(16) char s_strArgTemp2[0x4000];
+	int iRemaining = 0;
+	if (ExtractArgsEx(EXTRACT_ARGS_EX, &s_strArgTemp2, &iRemaining))
+	{
+		Tile::Value* tileVal = NULL;
+		Tile* component = GetTargetComponent(s_strArgTemp2, &tileVal);
+		if (component)
+		{
+			if (tileVal)
+			{
+				*result = IsGradualSetFloatMode(component, tileVal->id, iRemaining);
+			}
+		}
+		else { *result = -1; }
+	}
+	return true;
+}
+
+
 
 //bool Cmd_SetTileValueAction_Execute(COMMAND_ARGS)
 //{

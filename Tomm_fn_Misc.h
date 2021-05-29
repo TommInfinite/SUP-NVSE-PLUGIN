@@ -1,6 +1,5 @@
 #pragma once
 
-
 DEFINE_COMMAND_PLUGIN(GetSUPVersion, "Get plugin version", 0, 0, NULL)
 DEFINE_COMMAND_PLUGIN(GetLoadedSaveSize, "", 0, 1, kParams_Tomm_OneInt)
 DEFINE_COMMAND_PLUGIN(GetSavedSaveSize, "", 0, 1, kParams_Tomm_OneInt)
@@ -23,7 +22,12 @@ DEFINE_COMMAND_PLUGIN(CallFunctionNextFrame, "", 0, 3, kParams_Tomm_CallFunction
 DEFINE_COMMAND_ALT_PLUGIN(DumpLoadOrder, DumpLO, "", 0, 0, NULL)
 DEFINE_COMMAND_PLUGIN(GetModTraitSTR, "", 0, 2, kParams_Tomm_TwoInts)
 DEFINE_COMMAND_PLUGIN(GetCurrentQuestObjectiveTeleportLinksAlt, "", 0, 0, NULL)
+DEFINE_COMMAND_PLUGIN(GetNifBlockTranslationToVars, "", 0, 6, kParams_Tomm_GetNifBlockTranslationToVars)
 
+
+
+
+//DEFINE_COMMAND_PLUGIN(SetCellFullNameSUP, "", 0, 2, kParams_Tomm_OneCell_OneString)
 
 
 
@@ -234,8 +238,6 @@ struct CellScanInfo
 
 };
 
-
-
 bool Cmd_GetNearCells_Execute(COMMAND_ARGS) // from NVSE
 {
 	double uGrid = 0;
@@ -272,7 +274,7 @@ bool Cmd_GetNearCells_Execute(COMMAND_ARGS) // from NVSE
 	while (info.curCell)
 	{
 		ArrIfc->AppendElement(CellsArr, NVSEArrayElement(info.curCell));
-		
+
 		info.NextCell();
 	}
 	ArrIfc->AssignCommandResult(CellsArr, result);
@@ -917,13 +919,45 @@ bool Cmd_GetModTraitSTR_Execute(COMMAND_ARGS)
 
 
 
-
-
+#include "Tomm_Nif_blocks.h"
+__declspec(naked) UInt32 NiAVObject::GetIndex()
+{
+	__asm
+	{
+		mov		eax, [ecx + 0x18]
+		test	eax, eax
+		jz		done
+		mov		edx, [eax + 0xA0]
+		movzx	eax, word ptr[eax + 0xA6]
+		test	eax, eax
+		jz		done
+		ALIGN 16
+		iterHead:
+		cmp[edx + eax * 4 - 4], ecx
+			jz		done
+			dec		eax
+			jnz		iterHead
+			done :
+		retn
+	}
+}
 
 bool Cmd_SUPTest_Execute(COMMAND_ARGS)
 {
+	//NiNode* rootNode = thisObj->GetNiNode();
 
+	//if (rootNode)
+	//{
+	//	NiAVObject** nodes = rootNode->m_children.data;
+	//	int iKey = -1;
 
+	//	while (rootNode->m_children.numObjs > (iKey += 1))
+	//	{
+	//		Console_Print("NAME IS %s", rootNode[iKey].GetName());
+
+	//	}
+
+	//}
 
 	return true;
 }
@@ -961,6 +995,40 @@ bool Cmd_GetCurrentQuestObjectiveTeleportLinksAlt_Execute(COMMAND_ARGS)
 }
 
 
+
+
+
+
+bool Cmd_GetNifBlockTranslationToVars_Execute(COMMAND_ARGS)
+{
+	*result = 0;
+	char blockName[0x40];
+	UInt32 getWorld = 0, pcNode = 0;
+	ScriptVar* outX = NULL, * outY = NULL, * outZ = NULL;
+	if (ExtractArgsEx(EXTRACT_ARGS_EX, &outX, &outY, &outZ, &blockName, &getWorld, &pcNode))
+	{
+		*result = -1;
+		NiAVObject* niBlock = GetNifBlock(thisObj, pcNode, blockName);
+		if (niBlock)
+		{
+			*result = 1;
+			if (getWorld)
+			{
+				NiVector3& transltn = niBlock->m_worldTranslate;
+				outX->data.num = transltn.x;
+				outY->data.num = transltn.y;
+				outZ->data.num = transltn.z;
+			}else
+			{
+				NiVector3& transltn = niBlock->m_localTranslate;
+				outX->data.num = transltn.x;
+				outY->data.num = transltn.y;
+				outZ->data.num = transltn.z;
+			}
+		}
+	}
+	return true;
+}
 
 
 

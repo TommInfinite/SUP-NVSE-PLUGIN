@@ -217,6 +217,12 @@ ParamInfo kParams_Tomm_OneString[1] =
 	{"String", kParamType_String, 0},
 };
 
+
+
+
+
+
+
 ParamInfo kParams_Tomm_OneString_OneOptionalInt[2] =
 {
 	{"String", kParamType_String, 0},
@@ -228,6 +234,8 @@ ParamInfo kParams_Tomm_OneString_OneInt[2] =
 	{"String", kParamType_String, 0},
 	{"int", kParamType_Integer, 0 },
 };
+
+
 
 ParamInfo kParams_Tomm_OneString_TwoInts[3] =
 {
@@ -242,6 +250,9 @@ ParamInfo kParams_Tomm_TwoStrings[2] =
 	{"String", kParamType_String, 0},
 	{"String", kParamType_String, 0},
 };
+
+
+
 
 ParamInfo kParams_Tomm_ThreeStrings[3] =
 {
@@ -697,6 +708,36 @@ static ParamInfo kParams_Tomm_TopicGetAllTopicInfos[2] =
 };
 
 
+
+
+ParamInfo kParams_Tomm_SetUIFloatMultiple[4] =
+{
+	{"String", kParamType_String, 0},
+	{"String", kParamType_String, 0},
+	{"Float", kParamType_Float, 0},
+	{ "int", kParamType_Integer, 1 },
+};
+
+
+
+
+ParamInfo kParams_Tomm_OneCell_OneString[2] =
+{
+	{"Cell", kParamType_Cell, 0},
+	{"String", kParamType_String, 0},
+};
+
+
+
+ParamInfo kParams_Tomm_GetNifBlockTranslationToVars[6] =
+{
+	{"Variable", kParamType_ScriptVariable, 0},
+	{"Variable", kParamType_ScriptVariable, 0},
+	{"Variable", kParamType_ScriptVariable, 0},
+	{"String", kParamType_String, 0},
+	{"int", kParamType_Integer, 0 },
+	{"int", kParamType_Integer, 1 },
+};
 
 
 //ParamInfo kParams_Tomm_CreateDebugText[3] =

@@ -1,5 +1,5 @@
 
-
+#define SUPVERSION 220
 
 #include "nvse/PluginAPI.h"
 #include "nvse/CommandTable.h"
@@ -62,6 +62,7 @@ bool (*ExtractArgsEx)(COMMAND_ARGS_EX, ...);
 
 CommandInfo* (*GetCmdByOpcode)(UInt32 opcode);
 Cmd_Execute KillActor;
+Cmd_Execute SetCellFullName;
 NVSEStringVarInterface* StrIfc = NULL;
 HUDMainMenu* g_HUDMainMenu = NULL;
 InterfaceManager* g_interfaceManager = NULL;
@@ -80,7 +81,7 @@ FontManagerJIP* g_fontManager = NULL; // FROM JIP
 //VATSCameraData* g_VATSCameraData = (VATSCameraData*)0x11F2250; // From JIP
 VATSMenu** g_VATSMenu = (VATSMenu**)0x11DB0D4;
 ProcessManager* g_processManager = (ProcessManager*)0x11E0E80; // From JiP
-UInt32 SUPNVSEVersion = 210; ////////////////////////////////////////////////////////////////////////////VERSION
+UInt32 SUPNVSEVersion = SUPVERSION;
 #define NUM_ARGS *((UInt8*)scriptData + *opcodeOffsetPtr)
 #define REFR_RES *(UInt32*)result // From JIP
 #define IS_ACTOR(form) ((*(UInt32**)form)[0x40] == 0x8D0360) // From JIP
@@ -119,7 +120,7 @@ typedef NVSEArrayVarInterface::Element NVSEArrayElement;
 bool (*FunctionCallScript)(Script* funcScript, TESObjectREFR* callingObj, TESObjectREFR* container, NVSEArrayElement* result, UInt8 numArgs, ...);
 
 
-bool IsGradualSetFloat(Tile* tile, UInt32 valueID) // Written by JiP
+bool IsGradualSetFloatValue(Tile* tile, UInt32 valueID) // Written by Jazz
 {
 	auto iter = g_queuedGradualSetFloat->Head();
 	GradualSetFloat* grad;
@@ -132,6 +133,61 @@ bool IsGradualSetFloat(Tile* tile, UInt32 valueID) // Written by JiP
 	return false;
 }
 
+
+bool IsGradualSetFloatTile(Tile* tile) // Written by Jazz,Edited by me.
+{
+	auto iter = g_queuedGradualSetFloat->Head();
+	GradualSetFloat* grad;
+	do
+	{
+		grad = iter->data;
+		if (grad && (grad->tile == tile))
+			return true;
+	} while (iter = iter->next);
+	return false;
+}
+
+
+float IsGradualSetFloatTimer(Tile* tile, UInt32 valueID, int iRemaining) // Written by Jazz,Edited by me.
+{
+	auto iter = g_queuedGradualSetFloat->Head();
+	GradualSetFloat* grad;
+	do
+	{
+		grad = iter->data;
+		if (grad && (grad->tile == tile) && (grad->valueID == valueID))
+		{
+			double fTickCount = GetTickCount();
+			if (iRemaining)
+			{
+				return ((grad->durationMS - (fTickCount - grad->startTimeMS)) / 1000);
+
+			}
+			else {
+				return ((fTickCount - grad->startTimeMS) / 1000);
+			}
+
+		}
+
+	} while (iter = iter->next);
+	return -1;
+}
+
+int IsGradualSetFloatMode(Tile* tile, UInt32 valueID, int iRemaining) // Written by Jazz,Edited by me.
+{
+	auto iter = g_queuedGradualSetFloat->Head();
+	GradualSetFloat* grad;
+	do
+	{
+		grad = iter->data;
+		if (grad && (grad->tile == tile) && (grad->valueID == valueID))
+		{
+			return (grad->changeMode);
+		}
+
+	} while (iter = iter->next);
+	return -1;
+}
 
 
 #include <Tomm_HUDBars.h>
@@ -896,6 +952,7 @@ void MessageHandler(NVSEMessagingInterface::Message* msg)
 		g_kMenuRoot = g_interfaceManager->menuRoot;
 		g_Cursor = g_interfaceManager->cursor;
 		KillActor = GetCmdByOpcode(0x108B)->execute;
+		SetCellFullName = GetCmdByOpcode(0x111B)->execute;
 		g_fontManager = *(FontManagerJIP**)0x11F33F8; // From JIP
 		g_dataHandler = DataHandler::Get();
 		//WriteRelJump(0xA23252, 0xA23296);
@@ -1130,7 +1187,7 @@ bool NVSEPlugin_Load(const NVSEInterface* nvse)
 	/*54*/RegisterScriptCommand(IsPlayerOverencumbered);
 	/*55*/RegisterScriptCommand(SetCaughtPCPickpocketting);
 	/*56*/RegisterScriptCommand(KillAll2);
-	/*57*/RegisterScriptCommand(LunetteCMD);
+	/*57*/RegisterScriptCommand(LunetteCMD); //Undocumented
 	/*58*/RegisterScriptCommand(FindClosestActorFromRef);
 	/*59*/RegisterScriptCommand(FindClosestActor);
 	/*60*/RegisterScriptCommand(FindRandomActorFromRef);
@@ -1201,10 +1258,17 @@ bool NVSEPlugin_Load(const NVSEInterface* nvse)
 	/*122*/RegisterScriptCommand(TopicSetFlags);
 	/*123*/RegisterScriptCommand(TopicGetType);
 	/*124*/REG_CMD_ARR(TopicGetAllTopicInfos);
+	//  v.2.20
+	/*125*/RegisterScriptCommand(GetUIElementType);
+	/*126*/RegisterScriptCommand(SetUIFloatMultiple);
+	/*127*/RegisterScriptCommand(GetUIFloatGradualActiveForTileTrait);
+	/*128*/RegisterScriptCommand(GetUIFloatGradualActiveForTile);
+	/*129*/RegisterScriptCommand(GetUIFloatGradualTimer);
+	/*130*/RegisterScriptCommand(GetUIFloatGradualMode);
+	/*131*/RegisterScriptCommand(GetNifBlockTranslationToVars); //Undocumented
 
 
-
-
+	
 	//*20*/REG_CMD_ARR(SupTestArray, Array);
 	//*114*/RegisterScriptCommand(HudBarSetOnVisibilityChangeEvent);
 	//*116*/RegisterScriptCommand(TopicInfoDeleteChoiceNth);

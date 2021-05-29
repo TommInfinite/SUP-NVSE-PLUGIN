@@ -260,7 +260,7 @@ int f_Bars_BarSetBarValue(int iKey, float fBarVarValue)
 		{
 			//Console_Print("fBarVarValue START is %f", fBarVarValue);
 
-			if (IsGradualSetFloat(HBIter.TileMeter, kTileValue_alpha) == 0)
+			if (IsGradualSetFloatValue(HBIter.TileMeter, kTileValue_alpha) == 0)
 			{
 				fBarVarValue *= HBIter.fAlphaDifference;
 				fBarVarValue += HBIter.fAlphaMin;

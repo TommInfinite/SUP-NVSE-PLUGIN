@@ -378,6 +378,7 @@
     <ClInclude Include="Tomm_fn_Misc.h" />
     <ClInclude Include="Tomm_fn_UI.h" />
     <ClInclude Include="params.h" />
+    <ClInclude Include="Tomm_Nif_blocks.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="exports.def" />
