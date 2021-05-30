@@ -942,22 +942,11 @@ __declspec(naked) UInt32 NiAVObject::GetIndex()
 	}
 }
 
+
+
 bool Cmd_SUPTest_Execute(COMMAND_ARGS)
 {
-	//NiNode* rootNode = thisObj->GetNiNode();
 
-	//if (rootNode)
-	//{
-	//	NiAVObject** nodes = rootNode->m_children.data;
-	//	int iKey = -1;
-
-	//	while (rootNode->m_children.numObjs > (iKey += 1))
-	//	{
-	//		Console_Print("NAME IS %s", rootNode[iKey].GetName());
-
-	//	}
-
-	//}
 
 	return true;
 }
@@ -1059,3 +1048,16 @@ bool Cmd_GetNifBlockTranslationToVars_Execute(COMMAND_ARGS)
 //}
 
 
+//NiNode* rootNode = thisObj->GetNiNode();
+//if (rootNode)
+//{
+//	NiAVObject** nodes = rootNode->m_children.data;
+//	int iKey = -1;
+
+//	while (rootNode->m_children.numObjs > (iKey += 1))
+//	{
+//		Console_Print("NAME IS %s", rootNode[iKey].GetName());
+
+//	}
+
+//}

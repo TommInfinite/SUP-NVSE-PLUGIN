@@ -740,6 +740,96 @@ ParamInfo kParams_Tomm_GetNifBlockTranslationToVars[6] =
 };
 
 
+
+static ParamInfo kParams_Tomm_ExcelWriteFloat[5] =
+{
+	{"String", kParamType_String, 0},
+	{ "int", kParamType_Integer, 0 },
+	{ "int", kParamType_Integer, 0 },
+	{ "int", kParamType_Integer, 0 },
+	{ "float", kParamType_Float, 0 },
+};
+
+
+static ParamInfo kParams_Tomm_ExcelWriteString[5] =
+{
+	{"String", kParamType_String, 0},
+	{ "int", kParamType_Integer, 0 },
+	{ "int", kParamType_Integer, 0 },
+	{ "int", kParamType_Integer, 0 },
+	{"String", kParamType_String, 0},
+};
+
+static ParamInfo kParams_Tomm_ExcelReadFloat[4] =
+{
+	{"String", kParamType_String, 0},
+	{ "int", kParamType_Integer, 0 },
+	{ "int", kParamType_Integer, 0 },
+	{ "int", kParamType_Integer, 0 },
+};
+
+
+
+
+static ParamInfo kParams_Tomm_ExcelReadString[4] =
+{
+	{"String", kParamType_String, 0},
+	{ "int", kParamType_Integer, 0 },
+	{ "int", kParamType_Integer, 0 },
+	{ "int", kParamType_Integer, 0 },
+};
+
+static ParamInfo kParams_Tomm_ExcelGetWorkSheetCount[1] =
+{
+	{"String", kParamType_String, 0},
+};
+
+static ParamInfo kParams_Tomm_ExcelGetRowCount[2] =
+{
+	{"String", kParamType_String, 0},
+	{ "int", kParamType_Integer, 0 },
+};
+
+static ParamInfo kParams_Tomm_ExcelGetColCount[2] =
+{
+	{"String", kParamType_String, 0},
+	{ "int", kParamType_Integer, 0 },
+};
+
+static ParamInfo kParams_Tomm_SetSheetName[3] =
+{
+	{"String", kParamType_String, 0},
+	{ "int", kParamType_Integer, 0 },
+	{"String", kParamType_String, 1},
+};
+
+
+
+static ParamInfo kParams_Tomm_ExcelGetCellValueType[4] =
+{
+	{"String", kParamType_String, 0},
+	{ "int", kParamType_Integer, 0 },
+	{ "int", kParamType_Integer, 0 },
+	{ "int", kParamType_Integer, 0 },
+};
+
+
+static ParamInfo kParams_Tomm_ExcelEraseCell[4] =
+{
+	{"String", kParamType_String, 0},
+	{ "int", kParamType_Integer, 0 },
+	{ "int", kParamType_Integer, 0 },
+	{ "int", kParamType_Integer, 0 },
+};
+
+static ParamInfo kParams_Tomm_ExcelEraseSheet[2] =
+{
+	{"String", kParamType_String, 0},
+	{ "int", kParamType_Integer, 0 },
+};
+
+
+
 //ParamInfo kParams_Tomm_CreateDebugText[3] =
 //{
 //	{"String", kParamType_String, 0},

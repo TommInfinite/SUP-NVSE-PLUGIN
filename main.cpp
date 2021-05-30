@@ -1,5 +1,5 @@
 
-#define SUPVERSION 220
+#define SUPVERSION 230
 
 #include "nvse/PluginAPI.h"
 #include "nvse/CommandTable.h"
@@ -628,24 +628,24 @@ bool Actor::IsItemEquipped(TESForm* item) // From JIP
 
 // SaveFileVars
 //////////////////////////////
-char SavegameFolder[0x4000];
+char SavegameFolder[0x4000]{};
 //Temp
-char* s_SaveTemp;
+char* s_SaveTemp = NULL;
 
 //LastLoaded
 UInt32 iLoadSGLength;
-char LoadedSGName[0x4000] = "NULL";
-char LoadedSGPathFOS[0x4000] = "NULL";
-char LoadedSGPathNVSE[0x4000] = "NULL";
+char LoadedSGName[0x4000]{};
+char LoadedSGPathFOS[0x4000]{};
+char LoadedSGPathNVSE[0x4000]{};
 
 //LastSaved
 UInt32 iSavedSGLength;
-char SavedSGName[0x4000] = "NULL";
-char SavedSGPathFOS[0x4000] = "NULL";
-char SavedSGPathNVSE[0x4000] = "NULL";
+char SavedSGName[0x4000]{};
+char SavedSGPathFOS[0x4000]{};
+char SavedSGPathNVSE[0x4000]{};
 ////////////////////////////// GLOBALS
 
-char FalloutFolderPath[0x4000] = "NULL";
+char FalloutFolderPath[0x4000]{};
 
 /// //////////////////////////
 
@@ -654,7 +654,7 @@ NVSEArrayVar* TileArrayStore;
 NVSEArrayVar* g_ar_temp;
 
 //STRING GLOBAL
-char g_FileInfoTempChar[0x4000] = "NULL";
+char g_FileInfoTempChar[0x4000]{};
 
 
 //XML
@@ -845,7 +845,7 @@ void MessageHandler(NVSEMessagingInterface::Message* msg)
 
 	switch (msg->type)
 	{
-	case NVSEMessagingInterface::kMessage_LoadGame: 
+	case NVSEMessagingInterface::kMessage_LoadGame:
 
 		//g_PlayerCamState = g_ThePlayer->is3rdPerson;
 
@@ -854,20 +854,22 @@ void MessageHandler(NVSEMessagingInterface::Message* msg)
 
 		UInt32 iLength2;
 		s_SaveTemp = (char*)msg->data;
-		strcpy(SavedSGName, "");
-		iLength2 = strlen(s_SaveTemp) - 4;
-		strncat(SavedSGName, s_SaveTemp, iLength2);
+		if (s_SaveTemp)
+		{
+			strcpy(SavedSGName, "");
+			iLength2 = strlen(s_SaveTemp) - 4;
+			strncat(SavedSGName, s_SaveTemp, iLength2);
+			strcpy(SavedSGPathFOS, SavegameFolder);
+			strcat(SavedSGPathFOS, s_SaveTemp);
 
+			strcpy(SavedSGPathNVSE, SavegameFolder);
+			iSavedSGLength = strlen(s_SaveTemp);
+			iLength2 = iSavedSGLength - 3;
+			strncat(SavedSGPathNVSE, s_SaveTemp, iLength2);
+			strcat(SavedSGPathNVSE, "nvse");
+		}
 
-
-		strcpy(SavedSGPathFOS, SavegameFolder);
-		strcat(SavedSGPathFOS, s_SaveTemp);
-
-		strcpy(SavedSGPathNVSE, SavegameFolder);
-		iSavedSGLength = strlen(s_SaveTemp);
-		iLength2 = iSavedSGLength - 3;
-		strncat(SavedSGPathNVSE, s_SaveTemp, iLength2);
-		strcat(SavedSGPathNVSE, "nvse");
+		s_SaveTemp = NULL;
 
 		//_MESSAGE("Current Saved FOS name is %s", SavedSGPathFOS);
 		//_MESSAGE("Current Saved NVSE name is %s", SavedSGPathNVSE);
@@ -885,28 +887,26 @@ void MessageHandler(NVSEMessagingInterface::Message* msg)
 
 		UInt32 iLength;
 		s_SaveTemp = (char*)msg->data;
-		strcpy(LoadedSGName, "");
-		iLength = strlen(s_SaveTemp) - 4;
-		strncat(LoadedSGName, s_SaveTemp, iLength);
+		if (s_SaveTemp)
+		{
+			strcpy(LoadedSGName, "");
+			iLength = strlen(s_SaveTemp) - 4;
+			strncat(LoadedSGName, s_SaveTemp, iLength);
+			strcpy(LoadedSGPathFOS, SavegameFolder);
+			strcat(LoadedSGPathFOS, s_SaveTemp);
 
+			strcpy(LoadedSGPathNVSE, SavegameFolder);
+			iLoadSGLength = strlen(s_SaveTemp);
+			iLength = iLoadSGLength - 3;
+			strncat(LoadedSGPathNVSE, s_SaveTemp, iLength);
+			strcat(LoadedSGPathNVSE, "nvse");
+		}
 
-
-		//strncat(LoadedSGName, s_SaveTemp, iLength);
-
-		strcpy(LoadedSGPathFOS, SavegameFolder);
-		strcat(LoadedSGPathFOS, s_SaveTemp);
-
-		strcpy(LoadedSGPathNVSE, SavegameFolder);
-		iLoadSGLength = strlen(s_SaveTemp);
-		iLength = iLoadSGLength - 3;
-		strncat(LoadedSGPathNVSE, s_SaveTemp, iLength);
-		strcat(LoadedSGPathNVSE, "nvse");
-
+		s_SaveTemp = NULL;
 
 		if ((*g_osGlobals)->tfcState == 1 && bTFCPosOnLoadFix == 1) // Jazz
 		{
 			(*(OSGlobals**)0x11DEA0C)->tfcState = 0;
-
 		}
 
 		//_MESSAGE("Current Loaded FOS name is %s", LoadedSGPathFOS);
@@ -942,7 +942,7 @@ void MessageHandler(NVSEMessagingInterface::Message* msg)
 		//_MESSAGE("Received DELETE message with file path %s", msg->data);
 		break;
 
-	case NVSEMessagingInterface::kMessage_DeferredInit: 
+	case NVSEMessagingInterface::kMessage_DeferredInit:
 		g_HUDMainMenu = *(HUDMainMenu**)0x11D96C0;  // From JiP's patches game
 		g_interfaceManager = *(InterfaceManager**)0x11D8A80; // From JiP's patches game
 		g_tileMenuArray = *(TileMenu***)0x11F350C; // From JiP's patches game
@@ -1008,7 +1008,7 @@ void MessageHandler(NVSEMessagingInterface::Message* msg)
 #include "Tomm_fn_Misc.h"
 #include "Tomm_fn_DialogueTopics.h"
 
-
+#include "Tomm_fn_Excel.h"
 
 
 
@@ -1266,9 +1266,22 @@ bool NVSEPlugin_Load(const NVSEInterface* nvse)
 	/*129*/RegisterScriptCommand(GetUIFloatGradualTimer);
 	/*130*/RegisterScriptCommand(GetUIFloatGradualMode);
 	/*131*/RegisterScriptCommand(GetNifBlockTranslationToVars); //Undocumented
+	//  v.2.30
+	/*132*/RegisterScriptCommand(ExcelWriteFloat);
+	/*133*/RegisterScriptCommand(ExcelWriteString);
+	/*132*/RegisterScriptCommand(ExcelReadFloat);
+	/*133*/REG_CMD_STR(ExcelReadString);
+	/*132*/RegisterScriptCommand(ExcelGetWorkSheetCount);
+	/*133*/RegisterScriptCommand(ExcelGetRowCount);
+	/*133*/RegisterScriptCommand(ExcelGetColCount);
+	/*133*/REG_CMD_STR(ExcelSetSheetName);
+	/*132*/RegisterScriptCommand(ExcelGetCellValueType);
+	/*132*/RegisterScriptCommand(ExcelEraseCell);
+	/*132*/RegisterScriptCommand(ExcelEraseSheet);
 
 
-	
+
+
 	//*20*/REG_CMD_ARR(SupTestArray, Array);
 	//*114*/RegisterScriptCommand(HudBarSetOnVisibilityChangeEvent);
 	//*116*/RegisterScriptCommand(TopicInfoDeleteChoiceNth);

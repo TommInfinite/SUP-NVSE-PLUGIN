@@ -10,6 +10,9 @@
     <Filter Include="functions">
       <UniqueIdentifier>{6b6023f9-8eda-473f-b7fb-626e9a61fcad}</UniqueIdentifier>
     </Filter>
+    <Filter Include="BasicExcel">
+      <UniqueIdentifier>{3a6de620-4684-4654-8761-4bd824f32574}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\nvse\nvse\GameAPI.cpp">
@@ -67,6 +70,12 @@
     </ClCompile>
     <ClCompile Include="..\nvse\nvse\printf.cpp">
       <Filter>nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="BasicExcel.cpp">
+      <Filter>BasicExcel</Filter>
+    </ClCompile>
+    <ClCompile Include="ExcelFormat.cpp">
+      <Filter>BasicExcel</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -181,6 +190,15 @@
     </ClInclude>
     <ClInclude Include="Tomm_Nif_blocks.h">
       <Filter>local</Filter>
+    </ClInclude>
+    <ClInclude Include="BasicExcel.hpp">
+      <Filter>BasicExcel</Filter>
+    </ClInclude>
+    <ClInclude Include="ExcelFormat.h">
+      <Filter>BasicExcel</Filter>
+    </ClInclude>
+    <ClInclude Include="Tomm_fn_Excel.h">
+      <Filter>functions</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
