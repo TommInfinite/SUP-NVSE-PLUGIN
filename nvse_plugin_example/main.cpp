@@ -1088,7 +1088,7 @@ bool NVSEPlugin_Query(const NVSEInterface* nvse, PluginInfo* info)
 
 
 	// version checks
-	if (nvse->nvseVersion < 0x6010010)
+	if (nvse->nvseVersion < 0x6010020)
 	{
 		_ERROR("NVSE version too old (expected at least xNVSE V6.12)");
 		return false;
