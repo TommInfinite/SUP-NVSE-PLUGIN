@@ -1,0 +1,30 @@
+﻿cl : command line warning D9035: option 'Gm' has been deprecated and will be removed in a future release
+  ITypes.cpp
+  ITimer.cpp
+  IThread.cpp
+  ITextParser.cpp
+  ISegmentStream.cpp
+  IReadWriteLock.cpp
+  IRangeMap.cpp
+  IPipeServer.cpp
+  IPipeClient.cpp
+  IObjectPool.cpp
+  IMutex.cpp
+  IMemPool.cpp
+  IInterlockedLong.cpp
+  IFileStream.cpp
+  IFIFO.cpp
+  IEvent.cpp
+  IErrors.cpp
+  IDynamicCreate.cpp
+  IDirectoryIterator.cpp
+  IDebugLog.cpp
+  Generating Code...
+  Compiling...
+  IDataStream.cpp
+  IDatabase.cpp
+  IConsole.cpp
+  IBufferStream.cpp
+  IArchive.cpp
+  Generating Code...
+  common_vc9.vcxproj -> F:\Fallout_NV\RELEASES\SUP NVSE Plugin\SUP_SOURCE\common\Debug VC9\common_vc9.lib

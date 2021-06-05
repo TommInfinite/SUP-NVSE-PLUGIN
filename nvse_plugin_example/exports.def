@@ -1,0 +1,20 @@
+LIBRARY	"SUP NVSE Plugin"
+EXPORTS
+NVSEPlugin_Query	@1
+NVSEPlugin_Load		@2
+fn_ext_GETVERSION @3
+f_Bars_AddNewElement @4
+f_Bars_BarSetBarValue @5
+f_Bars_BarGetKey @6
+f_Bars_BarDestroyEXECUTE @7
+f_Bars_BarSetTexture @8
+f_Bars_BarSetSize @9
+f_Bars_BarSetAutoPos @10
+f_Bars_BarSetTextString @11
+f_Bars_BarSetPos @12
+f_Bars_BarSetMeterTrait @13
+f_Bars_BarShowBar @14
+f_Bars_BarSetSizeAlt @15
+f_Bars_BarSetIndent @16
+f_Bars_BarGetVisible @17
+

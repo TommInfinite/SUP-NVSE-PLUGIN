@@ -1,0 +1,3 @@
+F:\Fallout_NV\NVSE-6.0.7SOURCE2\NVSE-6.0.7\common\Debug VC9\common_vc9.lib
+F:\Fallout_NV\RELEASES\Tomm NVSE Plugin\TOMM_SOURCE\common\Debug VC9\common_vc9.lib
+F:\Fallout_NV\RELEASES\SUP NVSE Plugin\SUP_SOURCE\common\Debug VC9\common_vc9.lib
