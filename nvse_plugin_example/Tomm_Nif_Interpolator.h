@@ -87,7 +87,7 @@ bool fn_NifInterpolatorEventCaller_CallFromLoop(vector<NifInterpolator>::iterato
 	{
 		if (VectorIter.modIdx == VectorEventCallerIter.modIdx && VectorEventCallerIter.SendFromLoops == 1)
 		{
-			FunctionCallScript(VectorEventCallerIter.FunctionToCall, VectorIter.thisObj, NULL, NULL, 4,NiBlockIter->GetName(), VectorIter.type,1, VectorIter.PCNode);
+			FunctionCallScript(VectorEventCallerIter.FunctionToCall, NULL, NULL, NULL, 5, VectorIter.thisObj,NiBlockIter->GetName(), VectorIter.type,1, VectorIter.PCNode);
 			return true;
 		}
 		++it_EventCaller;
@@ -182,7 +182,7 @@ vector<NifInterpolator>::iterator fn_NifInterpolator_Destroy(vector<NifInterpola
 
 	if (iCall == 1)
 	{
-		FunctionCallScript(VectorEventCallerIter.FunctionToCall, VectorIter.thisObj, NULL, NULL, 4, NiBlockIter->GetName(), VectorIter.type, 0, VectorIter.PCNode);
+		FunctionCallScript(VectorEventCallerIter.FunctionToCall, NULL, NULL, NULL, 5, VectorIter.thisObj, NiBlockIter->GetName(), VectorIter.type, 0, VectorIter.PCNode);
 	}
 
 
@@ -351,7 +351,7 @@ void fn_NifInterpolator_Iterate()
 
 
 
-		_MESSAGE("ITERATING NAME::%s", VectorIter.niBlock->GetName());
+		//_MESSAGE("ITERATING NAME::%s", VectorIter.niBlock->GetName());
 
 
 		if (VectorIter.type == k_NifInterTypeScale)
@@ -366,7 +366,7 @@ void fn_NifInterpolator_Iterate()
 						VectorIter.CurValue = VectorIter.StartValue;
 					NiBlockIter->m_localScale = VectorIter.CurValue;
 					NiBlockIter->Update();
-					_MESSAGE("Setting scale B::%f", VectorIter.CurValue);
+					//_MESSAGE("Setting scale B::%f", VectorIter.CurValue);
 				}
 				else {
 					if (VectorIter.mode == k_NifInterModeStartEnd)
@@ -411,7 +411,7 @@ void fn_NifInterpolator_Iterate()
 					NiBlockIter->m_localScale = VectorIter.CurValue;
 					NiBlockIter->Update();
 
-					_MESSAGE("Setting scale F::%f", VectorIter.CurValue);
+					//_MESSAGE("Setting scale F::%f", VectorIter.CurValue);
 				}
 				else {
 
@@ -627,96 +627,96 @@ void fn_NifInterpolator_Iterate()
 
 
 
-NiVector3 fn_NifInterpolator_CalcVector_Frame2(float PosX, float PosY, float PosZ, float fEndPosX, float fEndPosY, float fEndPosZ, float iFrame) //Fallout2AM
-{
-	NiVector3 outV{};
-
-	float ChangeX = 0, ChangeY = 0, ChangeZ = 0;
-
-	if (PosX > 0)
-	{
-		if (fEndPosX < 0)
-		{
-			ChangeX = -(PosX - fEndPosX) / iFrame;
-		}
-		else
-			if (PosX > fEndPosX)
-			{
-				ChangeX = -(PosX - fEndPosX) / iFrame;
-			}
-			else { ChangeX = (fEndPosX - PosX) / iFrame; }
-	}
-	else
-	{
-		if (fEndPosX > 0)
-			ChangeX = (fEndPosX - PosX) / iFrame;
-		else {
-			if (PosX > fEndPosX)
-				ChangeX = (fEndPosX - PosX) / iFrame;
-			else { ChangeX = -(PosX - fEndPosX) / iFrame; }
-		}
-
-	}
-
-
-	if (PosY > 0)
-	{
-		if (fEndPosY < 0)
-		{
-			ChangeY = -(PosY - fEndPosY) / iFrame;
-		}
-		else
-			if (PosY > fEndPosY)
-			{
-				ChangeY = -(PosY - fEndPosY) / iFrame;
-			}
-			else { ChangeY = (fEndPosY - PosY) / iFrame; }
-	}
-	else
-	{
-		if (fEndPosY > 0)
-			ChangeY = (fEndPosY - PosY) / iFrame;
-		else {
-			if (PosY > fEndPosY)
-				ChangeY = (fEndPosY - PosY) / iFrame;
-			else { ChangeY = -(PosY - fEndPosY) / iFrame; }
-		}
-
-	}
-
-	if (PosZ > 0)
-	{
-		if (fEndPosZ < 0)
-		{
-			ChangeZ = -(PosZ - fEndPosZ) / iFrame;
-		}
-		else
-			if (PosZ > fEndPosZ)
-			{
-				ChangeZ = -(PosZ - fEndPosZ) / iFrame;
-			}
-			else { ChangeZ = (fEndPosZ - PosZ) / iFrame; }
-	}
-	else
-	{
-		if (fEndPosZ > 0)
-			ChangeZ = (fEndPosZ - PosZ) / iFrame;
-		else {
-			if (PosZ > fEndPosZ)
-				ChangeZ = (fEndPosZ - PosZ) / iFrame;
-			else { ChangeZ = -(PosZ - fEndPosZ) / iFrame; }
-		}
-
-	}
-
-	outV.x = PosX + ChangeX;
-	outV.y = PosY + ChangeY;
-
-	_MESSAGE("PosZ::%f, CHANGEZ::%f", PosZ, ChangeZ);
-	outV.z = PosZ + ChangeZ;
-
-	return outV;
-}
+//NiVector3 fn_NifInterpolator_CalcVector_Frame2(float PosX, float PosY, float PosZ, float fEndPosX, float fEndPosY, float fEndPosZ, float iFrame) //Fallout2AM
+//{
+//	NiVector3 outV{};
+//
+//	float ChangeX = 0, ChangeY = 0, ChangeZ = 0;
+//
+//	if (PosX > 0)
+//	{
+//		if (fEndPosX < 0)
+//		{
+//			ChangeX = -(PosX - fEndPosX) / iFrame;
+//		}
+//		else
+//			if (PosX > fEndPosX)
+//			{
+//				ChangeX = -(PosX - fEndPosX) / iFrame;
+//			}
+//			else { ChangeX = (fEndPosX - PosX) / iFrame; }
+//	}
+//	else
+//	{
+//		if (fEndPosX > 0)
+//			ChangeX = (fEndPosX - PosX) / iFrame;
+//		else {
+//			if (PosX > fEndPosX)
+//				ChangeX = (fEndPosX - PosX) / iFrame;
+//			else { ChangeX = -(PosX - fEndPosX) / iFrame; }
+//		}
+//
+//	}
+//
+//
+//	if (PosY > 0)
+//	{
+//		if (fEndPosY < 0)
+//		{
+//			ChangeY = -(PosY - fEndPosY) / iFrame;
+//		}
+//		else
+//			if (PosY > fEndPosY)
+//			{
+//				ChangeY = -(PosY - fEndPosY) / iFrame;
+//			}
+//			else { ChangeY = (fEndPosY - PosY) / iFrame; }
+//	}
+//	else
+//	{
+//		if (fEndPosY > 0)
+//			ChangeY = (fEndPosY - PosY) / iFrame;
+//		else {
+//			if (PosY > fEndPosY)
+//				ChangeY = (fEndPosY - PosY) / iFrame;
+//			else { ChangeY = -(PosY - fEndPosY) / iFrame; }
+//		}
+//
+//	}
+//
+//	if (PosZ > 0)
+//	{
+//		if (fEndPosZ < 0)
+//		{
+//			ChangeZ = -(PosZ - fEndPosZ) / iFrame;
+//		}
+//		else
+//			if (PosZ > fEndPosZ)
+//			{
+//				ChangeZ = -(PosZ - fEndPosZ) / iFrame;
+//			}
+//			else { ChangeZ = (fEndPosZ - PosZ) / iFrame; }
+//	}
+//	else
+//	{
+//		if (fEndPosZ > 0)
+//			ChangeZ = (fEndPosZ - PosZ) / iFrame;
+//		else {
+//			if (PosZ > fEndPosZ)
+//				ChangeZ = (fEndPosZ - PosZ) / iFrame;
+//			else { ChangeZ = -(PosZ - fEndPosZ) / iFrame; }
+//		}
+//
+//	}
+//
+//	outV.x = PosX + ChangeX;
+//	outV.y = PosY + ChangeY;
+//
+//	_MESSAGE("PosZ::%f, CHANGEZ::%f", PosZ, ChangeZ);
+//	outV.z = PosZ + ChangeZ;
+//
+//	return outV;
+//}
 
 
 

@@ -54,7 +54,7 @@ DEFINE_COMMAND_ALT_PLUGIN(HudBarGetVisible, HBGetVisible, "", 0, 3, kParams_Tomm
 
 
 
-float f_Bars_GetFontHeight(int iFontID) 
+float f_Bars_GetFontHeight(int iFontID) // From JIP
 {
 	if (iFontID && (iFontID <= 89) && (iFontID != 9))
 	{}else { return 0; }
@@ -68,7 +68,7 @@ float f_Bars_GetFontHeight(int iFontID)
 	}
 }
 
-float f_Bars_GetTextureWidth(char* s_FileName) // Thanks C6 
+float f_Bars_GetTextureWidth(char* s_FileName) // Thanks C6, from JG
 {
 	char sPath[0x4000]{};
 	sprintf(sPath, "%s%s", "Data\\textures\\", s_FileName);
@@ -79,14 +79,14 @@ float f_Bars_GetTextureWidth(char* s_FileName) // Thanks C6
 		DWORD width;
 		sourceFile.ReadBuf(&width, 4);
 		float fResult = width;
-		_MESSAGE("READING WIDTH of %s>>>>>%f", sPath, fResult);
+		//_MESSAGE("READING WIDTH of %s>>>>>%f", sPath, fResult);
 		return width;
 	}
 
 }
 
 
-float f_Bars_GetTextureHeight(char* s_FileName) // Thanks C6 
+float f_Bars_GetTextureHeight(char* s_FileName) // Thanks C6 , from JG
 {
 	char sPath[0x4000]{};
 	sprintf(sPath, "%s%s", "Data\\textures\\", s_FileName);
@@ -97,7 +97,7 @@ float f_Bars_GetTextureHeight(char* s_FileName) // Thanks C6
 		DWORD height;
 		sourceFile.ReadBuf(&height, 4);
 		float fResult = height;
-		_MESSAGE("READING HEIGHT of %s>>>>>%f", sPath, fResult);
+		//_MESSAGE("READING HEIGHT of %s>>>>>%f", sPath, fResult);
 		return height;
 	}
 

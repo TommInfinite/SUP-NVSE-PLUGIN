@@ -62,14 +62,14 @@ bool Cmd_GetHUDVisibilityFlags_Execute(COMMAND_ARGS)
 
 
 
-TileMenu* __fastcall GetMenuTile(const char* componentPath) ///Taken from JiP or NVSE?? dont' remember.
+TileMenu* __fastcall GetMenuTile(const char* componentPath) ///from JIP NVSE jip_nvse.h
 {
 	UInt32 menuID = s_menuNameToID.Get(componentPath);
 	return menuID ? g_tileMenuArray[menuID - kMenuType_Min] : NULL;
 }
 
 
-Tile* __fastcall GetTargetComponent(const char* componentPath, Tile::Value** value = NULL)
+Tile* __fastcall GetTargetComponent(const char* componentPath, Tile::Value** value = NULL) ///from JIP NVSE jip_nvse.h
 {
 	char* slashPos = SlashPos(componentPath);
 	if (!slashPos)

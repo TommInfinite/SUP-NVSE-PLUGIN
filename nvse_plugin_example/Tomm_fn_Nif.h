@@ -17,13 +17,13 @@ DEFINE_COMMAND_PLUGIN(NifBlockInterpolateSetTrait, "", 1, 5, kParams_Tomm_NifBlo
 #define NifBlockIter2 (*block2)
 
 
-typedef NiTArray<NiAVObject*> NiAVObjectArray;
-#define IS_TYPE(objPtr, className) (*(UInt32*)objPtr == kVtbl_##className)
-#define IS_NODE(object) ((*(UInt32**)object)[3] == 0x6815C0)
+typedef NiTArray<NiAVObject*> NiAVObjectArray; // From JIP jip_nvse.h
+#define IS_TYPE(objPtr, className) (*(UInt32*)objPtr == kVtbl_##className) // From JIP jip_nvse.h
+#define IS_NODE(object) ((*(UInt32**)object)[3] == 0x6815C0) // From JIP jip_nvse.h
 
 
 
-__declspec(naked) UInt32 NiAVObject::GetIndex() 
+__declspec(naked) UInt32 NiAVObject::GetIndex()  // From JIP jip_nvse.h
 {
 	__asm
 	{
@@ -219,7 +219,7 @@ bool Cmd_GetNifBlockNumVerticles_Execute(COMMAND_ARGS)
 vector<NiAVObject*> Ar_Blocks1;
 vector<NiAVObject*> Ar_Blocks2;
 
-vector<NiAVObject*>  __fastcall  GetChildBlocks(NiNode* node, vector<NiAVObject*> &OutAr)
+vector<NiAVObject*>  __fastcall  GetChildBlocks(NiNode* node, vector<NiAVObject*> &OutAr) // From JIP
 {
 	NiAVObjectArray ChildArray = node->m_children;
 	NiAVObject** blockCurrent = NULL;

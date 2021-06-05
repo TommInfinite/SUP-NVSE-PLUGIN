@@ -356,7 +356,7 @@ bool Cmd_KillAllAlt_Execute(COMMAND_ARGS)
 	if (!cmbActors) return true;
 
 	CombatTarget* targets = cmbActors->targets.data;
-	_MESSAGE("Count %d", cmbActors->targets.size);
+	//_MESSAGE("Count %d", cmbActors->targets.size);
 
 	UInt32 curOffset = *opcodeOffsetPtr;
 
@@ -365,8 +365,8 @@ bool Cmd_KillAllAlt_Execute(COMMAND_ARGS)
 		actor = targets->target;
 		if ((actor) && IS_ACTOR(actor))
 		{
-			_MESSAGE("CALLING FUNCTION ON %s, Offset is %d", actor->GetName(), *opcodeOffsetPtr);
-
+			//_MESSAGE("CALLING FUNCTION ON %s, Offset is %d", actor->GetName(), *opcodeOffsetPtr);
+			//KillActor(paramInfo, scriptData, actor, containingObj, scriptObj, eventList, result, opcodeOffsetPtr);
 			KillActorExecute(paramInfo, scriptData, actor, containingObj, scriptObj, eventList, result, opcodeOffsetPtr);
 			*opcodeOffsetPtr = curOffset;
 		}

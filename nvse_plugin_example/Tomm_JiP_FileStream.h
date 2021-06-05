@@ -1,4 +1,5 @@
-//From JIP's Utility.h
+
+// Contents of this header file are copied from JIP's Utility.h from JiP NVSE Plugin.(https://github.com/jazzisparis/JIP-LN-NVSE)
 
 class FileStream
 {

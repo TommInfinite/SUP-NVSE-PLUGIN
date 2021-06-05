@@ -35,8 +35,8 @@
 
 
 
-
-
+// "From JiP" indicates that part of the code was copied from JiP NVSE Plugin.(https://github.com/jazzisparis/JIP-LN-NVSE)
+// "From JG" indicates that part of the code was copied from JohnnyGuitarNVSE.(https://github.com/carxt/JohnnyGuitarNVSE/tree/master/JG)
 
 
 
@@ -128,7 +128,7 @@ typedef NVSEArrayVarInterface::Element NVSEArrayElement;
 bool (*FunctionCallScript)(Script* funcScript, TESObjectREFR* callingObj, TESObjectREFR* container, NVSEArrayElement* result, UInt8 numArgs, ...);
 
 
-bool IsGradualSetFloatValue(Tile* tile, UInt32 valueID) // Written by Jazz
+bool IsGradualSetFloatValue(Tile* tile, UInt32 valueID) // Written by JazzisParis
 {
 	auto iter = g_queuedGradualSetFloat->Head();
 	GradualSetFloat* grad;
@@ -142,7 +142,7 @@ bool IsGradualSetFloatValue(Tile* tile, UInt32 valueID) // Written by Jazz
 }
 
 
-bool IsGradualSetFloatTile(Tile* tile) // Written by Jazz,Edited by me.
+bool IsGradualSetFloatTile(Tile* tile) // Written by JazzisParis,Edited by me.
 {
 	auto iter = g_queuedGradualSetFloat->Head();
 	GradualSetFloat* grad;
@@ -156,7 +156,7 @@ bool IsGradualSetFloatTile(Tile* tile) // Written by Jazz,Edited by me.
 }
 
 
-float IsGradualSetFloatTimer(Tile* tile, UInt32 valueID, int iRemaining) // Written by Jazz,Edited by me.
+float IsGradualSetFloatTimer(Tile* tile, UInt32 valueID, int iRemaining) // Written by JazzisParis,Edited by me.
 {
 	auto iter = g_queuedGradualSetFloat->Head();
 	GradualSetFloat* grad;
@@ -181,7 +181,7 @@ float IsGradualSetFloatTimer(Tile* tile, UInt32 valueID, int iRemaining) // Writ
 	return -1;
 }
 
-int IsGradualSetFloatMode(Tile* tile, UInt32 valueID, int iRemaining) // Written by Jazz,Edited by me.
+int IsGradualSetFloatMode(Tile* tile, UInt32 valueID, int iRemaining) // Written by JazzisParis,Edited by me.
 {
 	auto iter = g_queuedGradualSetFloat->Head();
 	GradualSetFloat* grad;
@@ -207,13 +207,13 @@ int IsGradualSetFloatMode(Tile* tile, UInt32 valueID, int iRemaining) // Written
 
 
 
-Tile* InterfaceManager::GetActiveTile() //proably from JiP
+Tile* InterfaceManager::GetActiveTile() //// From JIP jip_nvse.h
 {
 	return activeTile ? activeTile : activeTileAlt;
 }
 
 
-UInt8 TESForm::GetOverridingModIdx()
+UInt8 TESForm::GetOverridingModIdx()// From JG
 {
 	ModInfo* info = mods.GetLastItem();
 	return info ? info->modIndex : 0xFF;
@@ -466,7 +466,7 @@ enum ObjectVtbl
 };
 
 
-const char* GetNthModNameAlt(UInt32 modIndex)
+const char* GetNthModNameAlt(UInt32 modIndex) // From JG
 {
 	if (modIndex == 255)
 		return "Console";
@@ -483,7 +483,7 @@ const char* GetNthModNameAlt(UInt32 modIndex)
 
 
 
-__declspec(naked) ExtraContainerChanges::EntryData* Actor::GetWeaponInfo() // From JIP
+__declspec(naked) ExtraContainerChanges::EntryData* Actor::GetWeaponInfo() // From JIP jip_nvse.h
 {
 	__asm
 	{
@@ -501,14 +501,14 @@ __declspec(naked) ExtraContainerChanges::EntryData* Actor::GetWeaponInfo() // Fr
 	}
 }
 
-TESObjectWEAP* Actor::GetEquippedWeapon() // From JIP
+TESObjectWEAP* Actor::GetEquippedWeapon() // From JIP jip_nvse.h
 {
 	ExtraContainerChanges::EntryData* weaponInfo = GetWeaponInfo();
 	return weaponInfo ? (TESObjectWEAP*)weaponInfo->type : NULL;
 }
 
 
-__declspec(naked) TESForm* TESObjectREFR::GetBaseForm()// From JIP
+__declspec(naked) TESForm* TESObjectREFR::GetBaseForm()// From JIP jip_nvse.h
 {
 	__asm
 	{
@@ -536,7 +536,7 @@ __declspec(naked) TESForm* TESObjectREFR::GetBaseForm()// From JIP
 	}
 }
 
-__declspec(naked) TESForm* TESObjectREFR::GetBaseForm2()// From JIP
+__declspec(naked) TESForm* TESObjectREFR::GetBaseForm2()// From JIP jip_nvse.h
 {
 	__asm
 	{
@@ -556,7 +556,7 @@ __declspec(naked) TESForm* TESObjectREFR::GetBaseForm2()// From JIP
 	}
 }
 
-__declspec(naked) ExtraContainerChanges::EntryData* TESObjectREFR::GetContainerChangesEntry(TESForm* itemForm) // From JIP
+__declspec(naked) ExtraContainerChanges::EntryData* TESObjectREFR::GetContainerChangesEntry(TESForm* itemForm) // From JIP jip_nvse.h
 {
 	__asm
 	{
@@ -591,7 +591,7 @@ __declspec(naked) ExtraContainerChanges::EntryData* TESObjectREFR::GetContainerC
 
 #define NOT_TYPE(form, type) (*(UInt32*)form != kVtbl_##type)
 
-bool Actor::IsItemEquipped(TESForm* item) // From JIP
+bool Actor::IsItemEquipped(TESForm* item) // From JIP jip_nvse.h
 {
 	if IS_ID(item, TESObjectWEAP)
 	{
@@ -607,7 +607,7 @@ bool Actor::IsItemEquipped(TESForm* item) // From JIP
 
 	}
 
-	ExtraContainerChanges::EntryData* entry = GetContainerChangesEntry(item);
+	ExtraContainerChanges::EntryData* entry = GetContainerChangesEntry(item); // From JIP jip_nvse.h
 	if (!entry || !entry->extendData)
 	{
 		//_MESSAGE("!entry || !entry->extendData");
@@ -634,7 +634,7 @@ bool Actor::IsItemEquipped(TESForm* item) // From JIP
 
 
 
-UInt32 InterfaceManager::GetTopVisibleMenuIDJIP()
+UInt32 InterfaceManager::GetTopVisibleMenuIDJIP() // From JIP jip_nvse.h
 {
 
 
@@ -704,7 +704,7 @@ Tile* g_SUPRectBars;
 
 
 
-__declspec(naked) float __vectorcall GetDistance3D(TESObjectREFR* ref1, TESObjectREFR* ref2) // From JIP
+__declspec(naked) float __vectorcall GetDistance3D(TESObjectREFR* ref1, TESObjectREFR* ref2) // From JIP ln_fn_math.h
 {
 	__asm
 	{
@@ -1088,9 +1088,9 @@ bool NVSEPlugin_Query(const NVSEInterface* nvse, PluginInfo* info)
 
 
 	// version checks
-	if (nvse->nvseVersion < NVSE_VERSION_INTEGER)
+	if (nvse->nvseVersion < 0x6010010)
 	{
-		_ERROR("NVSE version too old (got %08X expected at least %08X)", nvse->nvseVersion, NVSE_VERSION_INTEGER);
+		_ERROR("NVSE version too old (expected at least xNVSE V6.12)");
 		return false;
 	}
 

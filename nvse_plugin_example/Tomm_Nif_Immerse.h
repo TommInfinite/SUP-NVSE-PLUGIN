@@ -1,7 +1,7 @@
 #pragma once
 #define CALL_EAX(addr) __asm mov eax, addr __asm call eax
 
-// All from JIP
+// Contents of this header file are copied from netimmerse.h from JiP NVSE Plugin.(https://github.com/jazzisparis/JIP-LN-NVSE)
 
 static const float kFltPId180 = 0.01745329238F;
 

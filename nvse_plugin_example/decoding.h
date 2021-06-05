@@ -1,5 +1,9 @@
 #pragma once
 
+
+// Contents of this header file are copied from decoding.h from JiP NVSE Plugin.(https://github.com/jazzisparis/JIP-LN-NVSE)
+
+
 class ImageSpaceModifierInstanceRB;
 class ImageSpaceModifierInstance : public NiObject
 {
